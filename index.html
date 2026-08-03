@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#82be9e">
+  <meta name="description" content="Små privata händelser att se fram emot under dagen.">
+  <title>Händelser</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+
+  <main class="app-shell" id="app-shell" hidden>
+    <header class="home-header">
+      <section class="recipient-welcome" aria-labelledby="recipient-greeting">
+        <img class="welcome-flower welcome-flower-left" src="flower-mark.svg" alt="" aria-hidden="true">
+        <div class="recipient-welcome-copy">
+          <p class="eyebrow">EN LITEN PLATS FÖR DIG</p>
+          <h1 id="recipient-greeting">Hej</h1>
+          <p id="welcome-copy">Här väntar små händelser att öppna när du vill och orkar.</p>
+        </div>
+        <img class="welcome-flower welcome-flower-right" src="flower-mark.svg" alt="" aria-hidden="true">
+      </section>
+      <div class="home-date-line">
+        <span>DIN DAG</span>
+        <strong id="date-header">Idag</strong>
+      </div>
+    </header>
+
+    <section class="progress-panel" aria-labelledby="progress-title">
+      <div class="progress-copy">
+        <span class="progress-kicker" id="progress-title">Dagens händelser</span>
+        <strong id="progress-text">Laddar dagens händelser...</strong>
+      </div>
+      <div class="progress-ring" id="progress-ring" role="img" aria-label="Dagens framsteg">
+        <span id="progress-number">0/0</span>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+      <p class="next-message" id="next-message" aria-live="polite">Letar efter nästa händelse...</p>
+    </section>
+
+    <section class="timeline" id="timeline-container" aria-live="polite" aria-busy="true">
+      <div class="loading-state"><span class="soft-spinner" aria-hidden="true"></span><p>Hämtar dagens händelser</p></div>
+    </section>
+
+    <footer class="quiet-footer">
+      <button class="text-button" id="lock-app-btn" type="button">Logga ut</button>
+    </footer>
+  </main>
+
+  <section class="gate" id="viewer-gate" aria-labelledby="gate-title">
+    <div class="gate-bouquet" aria-hidden="true"><img src="flower-mark.svg" alt=""></div>
+    <p class="eyebrow">HÄNDELSER</p>
+    <h1 id="gate-title">En dag i taget</h1>
+    <p class="gate-copy">Skriv koden du har fått. Du skickas automatiskt till rätt plats.</p>
+    <form id="viewer-login-form" class="gate-form">
+      <label for="viewer-pin">Din kod</label>
+      <input id="viewer-pin" name="viewer-pin" type="password" inputmode="text" autocomplete="current-password" maxlength="24" placeholder="••••" required>
+      <label class="check-row" for="remember-viewer">
+        <input id="remember-viewer" type="checkbox" checked>
+        <span>Kom ihåg mig på den här enheten</span>
+      </label>
+      <button class="primary-button button-with-icon" type="submit"><span data-icon="flower"></span><span>Fortsätt</span></button>
+      <p class="form-status" id="viewer-login-status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="icons.js"></script>
+  <script src="config.js"></script>
+  <script src="facts.js"></script>
+  <script src="sudoku.js"></script>
+  <script src="data.js"></script>
+  <script src="pwa.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

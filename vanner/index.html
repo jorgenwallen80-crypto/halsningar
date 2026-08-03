@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#82be9e">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Händelser för vänner</title>
+  <link rel="icon" href="../icon-192.png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body class="friend-page">
+  <main class="contributor-shell">
+    <header class="page-header">
+      <div class="page-header-row">
+        <div>
+          <p class="eyebrow">FÖR DIG SOM VILL BIDRA</p>
+          <h1>Skicka något fint</h1>
+          <p>Välj vad du vill skicka. Det öppnas automatiskt på rätt dag och tid.</p>
+        </div>
+        <a class="back-link icon-link" href="index.html"><span data-icon="arrow-left"></span><span>Tidslinjen</span></a>
+      </div>
+      <span class="mode-badge" id="mode-badge">Laddar läge...</span>
+    </header>
+
+    <section class="panel" id="friend-auto-login-panel" aria-live="polite">
+      <div class="panel-floral-mark" aria-hidden="true"><img src="../flower-mark.svg" alt=""></div>
+      <div class="loading-state">
+        <span class="soft-spinner" aria-hidden="true"></span>
+        <h2>Öppnar vännernas sida</h2>
+        <p>Kontrollerar koden...</p>
+      </div>
+    </section>
+
+    <section class="panel" id="friend-login-panel" hidden>
+      <div class="panel-floral-mark" aria-hidden="true"><img src="../flower-mark.svg" alt=""></div>
+      <h2>Välkommen in</h2>
+      <p class="panel-intro">Använd koden du fått för att skicka något till tidslinjen.</p>
+      <form id="friend-login-form" class="form-grid">
+        <div class="field">
+          <label for="friend-pin">Vänkod</label>
+          <input class="text-input" id="friend-pin" type="password" autocomplete="current-password" placeholder="Skriv koden" required>
+        </div>
+        <button class="primary-button button-with-icon" type="submit"><span data-icon="flower"></span><span>Kom in</span></button>
+        <p class="form-status" id="friend-login-status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <div id="friend-workspace" hidden>
+      <nav class="tabbar" aria-label="Vännernas vyer">
+        <button class="tab-button active button-with-icon" type="button" data-tab="create"><span data-icon="plus"></span><span>Skapa nytt</span></button>
+        <button class="tab-button button-with-icon" type="button" data-tab="mine"><span data-icon="list"></span><span>Mina bidrag</span></button>
+      </nav>
+
+      <section class="panel" id="create-panel">
+        <h2 id="form-title">Skicka en hälsning</h2>
+        <p class="panel-intro" id="form-intro">Skriv något personligt som öppnas på den tid du väljer.</p>
+
+        <div class="content-types content-types-six" role="group" aria-label="Välj innehållstyp">
+          <button class="type-button active" type="button" data-type="text"><span class="type-icon" data-icon="message"></span><span>Hälsning</span></button>
+          <button class="type-button" type="button" data-type="image"><span class="type-icon" data-icon="image"></span><span>Bild</span></button>
+          <button class="type-button" type="button" data-type="quiz"><span class="type-icon" data-icon="quiz"></span><span>Quiz</span></button>
+          <button class="type-button" type="button" data-type="youtube"><span class="type-icon" data-icon="link"></span><span>Videoklipp / YouTube</span></button>
+          <button class="type-button" type="button" data-type="sudoku"><span class="type-icon" data-icon="sudoku"></span><span>Sudoku</span></button>
+          <button class="type-button" type="button" data-type="fact"><span class="type-icon" data-icon="fact"></span><span>Onödig fakta</span></button>
+        </div>
+
+        <form id="memory-form" class="form-grid">
+          <div class="field">
+            <label for="friend-name">Ditt namn</label>
+            <input class="text-input" id="friend-name" maxlength="60" placeholder="Till exempel Kusin Anna" required>
+          </div>
+          <div class="field">
+            <label for="unlock-date">När ska den öppnas?</label>
+            <div class="datetime-wrap"><input id="unlock-date" type="datetime-local" required></div>
+            <small>Den syns som en låst punkt direkt, men innehållet hålls dolt till exakt den här tiden.</small>
+            <small class="daily-limit-status" id="daily-limit-status" aria-live="polite"></small>
+          </div>
+          <div class="field">
+            <label for="memory-title">Liten rubrik <span class="optional-label">frivillig</span></label>
+            <input class="text-input" id="memory-title" maxlength="100" placeholder="Till exempel En liten paus från oss">
+          </div>
+          <div class="field">
+            <label for="memory-message">Ditt meddelande</label>
+            <textarea class="textarea" id="memory-message" maxlength="3000" placeholder="Skriv några personliga ord som visas tillsammans med händelsen..." required></textarea>
+            <small>Det visas även tillsammans med bild, quiz, klipp, sudoku eller fakta.</small>
+          </div>
+
+          <div class="type-fields type-note" data-fields="text">
+            <span data-icon="message"></span>
+            <p>Klart. Meddelandet ovan blir själva hälsningen.</p>
+          </div>
+
+          <div class="type-fields" data-fields="image" hidden>
+            <div class="field">
+              <label class="file-drop" for="image-upload">
+                <input id="image-upload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+                <span class="file-drop-icon" data-icon="upload"></span>
+                <strong>Välj en bild</strong>
+                <span>Den komprimeras automatiskt innan den sparas</span>
+              </label>
+              <img class="image-preview" id="image-preview" alt="Förhandsvisning" hidden>
+              <small id="image-size-status"></small>
+            </div>
+          </div>
+
+          <div class="type-fields" data-fields="quiz" hidden>
+            <div class="field">
+              <label>Antal frågor</label>
+              <div class="quiz-count-control" role="group" aria-label="Välj antal quizfrågor">
+                <button class="quiz-count-button active" type="button" data-quiz-count="1">1</button>
+                <button class="quiz-count-button" type="button" data-quiz-count="2">2</button>
+                <button class="quiz-count-button" type="button" data-quiz-count="3">3</button>
+                <button class="quiz-count-button" type="button" data-quiz-count="4">4</button>
+              </div>
+              <small>Quizet visas en fråga i taget, helt utan tidtagning.</small>
+            </div>
+            <div class="quiz-questions-editor" id="quiz-questions-editor"></div>
+          </div>
+
+          <div class="type-fields" data-fields="youtube" hidden>
+            <div class="field">
+              <label for="youtube-url">Länk till videoklipp</label>
+              <input class="text-input" id="youtube-url" type="url" inputmode="url" placeholder="https://youtube.com/...">
+              <small>YouTube spelas direkt i kortet. Andra videolänkar öppnas i originalappen eller webbläsaren.</small>
+            </div>
+          </div>
+
+          <div class="type-fields" data-fields="sudoku" hidden>
+            <div class="activity-editor sudoku-editor">
+              <div class="activity-editor-heading">
+                <div>
+                  <span class="activity-kicker"><span data-icon="sudoku"></span> LÄTT 4 × 4</span>
+                  <strong>Ett färdigt sudoku skapas automatiskt</strong>
+                </div>
+                <button class="secondary-button compact-button button-with-icon" id="new-sudoku-btn" type="button"><span data-icon="refresh"></span><span>Nytt sudoku</span></button>
+              </div>
+              <div class="sudoku-preview-grid" id="sudoku-editor-grid" aria-label="Förhandsvisning av sudoku"></div>
+              <p>Inga poäng och ingen tidtagning. Max ett sudoku per kalenderdag.</p>
+            </div>
+          </div>
+
+          <div class="type-fields" data-fields="fact" hidden>
+            <div class="activity-editor fact-editor">
+              <span class="activity-kicker"><span data-icon="fact"></span> ONÖDIG FAKTA</span>
+              <div class="choice-cards" role="radiogroup" aria-label="Välj hur faktan ska skapas">
+                <label class="choice-card active" id="fact-bank-choice">
+                  <input type="radio" name="fact-mode" value="bank" checked>
+                  <span><strong>Överraska mig</strong><small>Appen väljer från en färdig faktabank.</small></span>
+                </label>
+                <label class="choice-card" id="fact-custom-choice">
+                  <input type="radio" name="fact-mode" value="custom">
+                  <span><strong>Skriv en egen</strong><small>Perfekt för personlig eller märklig kunskap.</small></span>
+                </label>
+              </div>
+              <div id="fact-bank-fields">
+                <div class="field">
+                  <label for="fact-category">Kategori</label>
+                  <select class="text-input" id="fact-category"></select>
+                </div>
+                <button class="secondary-button button-with-icon" id="random-fact-btn" type="button"><span data-icon="shuffle"></span><span>Hämta en fakta</span></button>
+                <blockquote class="fact-pick" id="fact-pick">Tryck på knappen så väljer appen något.</blockquote>
+              </div>
+              <div id="fact-custom-fields" hidden>
+                <div class="field">
+                  <label for="custom-fact">Din onödiga fakta</label>
+                  <textarea class="textarea" id="custom-fact" maxlength="900" placeholder="Visste du att..."></textarea>
+                </div>
+              </div>
+              <p>Max en onödig fakta per kalenderdag.</p>
+            </div>
+          </div>
+
+          <div class="form-actions three-actions">
+            <button class="ghost-button button-with-icon" id="cancel-edit-btn" type="button" hidden><span data-icon="close"></span><span>Avbryt</span></button>
+            <button class="secondary-button button-with-icon" id="preview-memory-btn" type="button"><span data-icon="eye"></span><span>Förhandsgranska</span></button>
+            <button class="primary-button button-with-icon" id="submit-memory-btn" type="submit"><span data-icon="check"></span><span>Spara händelsen</span></button>
+          </div>
+          <p class="form-status" id="memory-form-status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel preview-panel" id="preview-panel" hidden aria-live="polite">
+        <div class="preview-heading">
+          <div>
+            <p class="eyebrow">FÖRHANDSVISNING</p>
+            <h2>Så här kommer kortet att se ut</h2>
+          </div>
+          <button class="icon-only-button" id="close-preview-btn" type="button" aria-label="Stäng förhandsvisning"><span data-icon="close"></span></button>
+        </div>
+        <div id="preview-card"></div>
+      </section>
+
+      <section class="panel" id="mine-panel" hidden>
+        <h2>Mina bidrag</h2>
+        <p class="panel-intro">Här syns sådant som skapats från den här webbläsaren. Du kan ändra, kopiera, ta bort eller be admin om hjälp.</p>
+        <div class="submission-list" id="my-submissions"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <script src="../icons.js"></script>
+  <script src="../config.js"></script>
+  <script src="../facts.js"></script>
+  <script src="../sudoku.js"></script>
+  <script src="../data.js"></script>
+  <script src="../pwa.js"></script>
+  <script src="../upload.js"></script>
+</body>
+</html>

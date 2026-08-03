@@ -1,0 +1,9 @@
+{
+  "name": "handelser-production",
+  "private": true,
+  "version": "6.5.0",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}
