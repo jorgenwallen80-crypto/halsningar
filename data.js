@@ -8,7 +8,6 @@
   const CHANNEL_NAME = 'handelser_updates';
   const IMAGE_BUCKET = 'handelser-images';
   let supabase = null;
-  let supabasePromise = null;
   let channel = null;
   let pollTimer = null;
   let serverAnchorMs = null;
@@ -220,24 +219,12 @@
 
   async function initSupabase() {
     if (supabase) return supabase;
-    if (supabasePromise) return supabasePromise;
     if (!config.supabaseUrl || config.supabaseUrl.includes('DIN_SUPABASE') || !config.supabaseAnonKey || config.supabaseAnonKey.includes('DIN_SUPABASE')) {
       throw new Error('Supabase är inte konfigurerat i config.js');
     }
-    supabasePromise = import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm')
-      .then((module) => {
-        if (!supabase) {
-          supabase = module.createClient(config.supabaseUrl,config.supabaseAnonKey,{
-            auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'handelser-auth'}
-          });
-        }
-        return supabase;
-      })
-      .catch((error) => {
-        supabasePromise = null;
-        throw error;
-      });
-    return supabasePromise;
+    const module = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
+    supabase = module.createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    return supabase;
   }
   async function rpc(name,args) {
     const client = await initSupabase();

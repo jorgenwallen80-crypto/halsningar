@@ -14,6 +14,7 @@
   const loginStatus = $('viewer-login-status');
   const timeline = $('timeline-container');
   const dateHeader = $('date-header');
+  const welcomeCopy = $('welcome-copy');
   const recipientGreeting = $('recipient-greeting');
   const progressText = $('progress-text');
   const progressNumber = $('progress-number');
@@ -40,7 +41,7 @@
   ];
 
   let viewerPin = '';
-  let presentation = {recipient_name:''};
+  let presentation = {recipient_name:'',welcome_message:'Här väntar små händelser att öppna när du vill och orkar.'};
   let memories = [];
   let previousUnlockedIds = new Set();
   let didInitialLoad = false;
@@ -143,7 +144,9 @@
     const now=new Date(nowMs());
     dateHeader.textContent=now.toLocaleDateString('sv-SE',{timeZone:'Europe/Stockholm',weekday:'long',day:'numeric',month:'long'});
     const name=String(presentation?.recipient_name || config.recipientName || '').trim();
+    const message=String(presentation?.welcome_message || '').trim() || 'Här väntar små händelser att öppna när du vill och orkar.';
     recipientGreeting.textContent=name?`Hej ${name}`:'Hej';
+    welcomeCopy.textContent=message;
   }
   function updateProgress() {
     const todays=memories.filter((item)=>dayKey(item.unlock_at)===dayKey(nowMs()));
