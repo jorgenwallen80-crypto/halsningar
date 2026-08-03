@@ -52,8 +52,8 @@
       <section class="panel admin-settings-panel welcome-settings-panel">
         <div class="page-header-row" style="align-items:center">
           <div>
-            <h2 style="margin:0">Personlig välkomsthälsning</h2>
-            <p class="panel-intro" style="margin:5px 0 0">Namnet och texten visas varmt och diskret högst upp när mottagaren öppnar tidslinjen.</p>
+            <h2 style="margin:0">Personlig hälsning</h2>
+            <p class="panel-intro" style="margin:5px 0 0">Namnet visas som ett mjukt och personligt Hej högst upp på tidslinjen.</p>
           </div>
         </div>
         <form id="presentation-form" class="form-grid presentation-settings-form">
@@ -61,16 +61,11 @@
             <label for="recipient-name-input">Namn</label>
             <input class="text-input" id="recipient-name-input" maxlength="60" placeholder="Till exempel Emma">
           </div>
-          <div class="field">
-            <label for="welcome-message-input">Välkomsttext</label>
-            <textarea class="textarea compact-textarea" id="welcome-message-input" maxlength="280" placeholder="Här väntar små händelser att öppna när du vill och orkar."></textarea>
-          </div>
           <div class="admin-welcome-preview" id="admin-welcome-preview" aria-live="polite">
             <span class="admin-preview-kicker">FÖRHANDSVISNING</span>
             <strong id="admin-preview-name">Hej</strong>
-            <p id="admin-preview-message">Här väntar små händelser att öppna när du vill och orkar.</p>
           </div>
-          <button class="primary-button compact-button button-with-icon" type="submit"><span data-icon="check"></span><span>Spara välkomsthälsningen</span></button>
+          <button class="primary-button compact-button button-with-icon" type="submit"><span data-icon="check"></span><span>Spara namnet</span></button>
           <p class="form-status" id="presentation-status" aria-live="polite"></p>
         </form>
       </section>
@@ -196,10 +191,10 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <script src="../icons.js"></script>
-  <script src="../config.js"></script>
-  <script src="../data.js"></script>
-  <script src="../pwa.js"></script>
-  <script src="../admin.js"></script>
+  <script defer src="../icons.js"></script>
+  <script defer src="../config.js"></script>
+  <script defer src="../data.js"></script>
+  <script defer src="../pwa.js"></script>
+  <script defer src="../admin.js"></script>
 </body>
 </html>

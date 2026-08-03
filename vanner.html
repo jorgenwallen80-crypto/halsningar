@@ -80,9 +80,13 @@
             <label for="memory-title">Liten rubrik <span class="optional-label">frivillig</span></label>
             <input class="text-input" id="memory-title" maxlength="100" placeholder="Till exempel En liten paus från oss">
           </div>
-          <div class="field">
+          <div class="field message-field">
             <label for="memory-message">Ditt meddelande</label>
             <textarea class="textarea" id="memory-message" maxlength="3000" placeholder="Skriv några personliga ord som visas tillsammans med händelsen..." required></textarea>
+            <div class="emoji-tools">
+              <button class="emoji-toggle button-with-icon" id="emoji-toggle" type="button" aria-expanded="false" aria-controls="emoji-picker"><span data-icon="smile"></span><span>Lägg till emoji</span></button>
+              <div class="emoji-picker" id="emoji-picker" role="group" aria-label="Välj emoji" hidden></div>
+            </div>
             <small>Det visas även tillsammans med bild, quiz, klipp, sudoku eller fakta.</small>
           </div>
 
@@ -200,12 +204,12 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-  <script src="icons.js"></script>
-  <script src="config.js"></script>
-  <script src="facts.js"></script>
-  <script src="sudoku.js"></script>
-  <script src="data.js"></script>
-  <script src="pwa.js"></script>
-  <script src="upload.js"></script>
+  <script defer src="icons.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="facts.js"></script>
+  <script defer src="sudoku.js"></script>
+  <script defer src="data.js"></script>
+  <script defer src="pwa.js"></script>
+  <script defer src="upload.js"></script>
 </body>
 </html>

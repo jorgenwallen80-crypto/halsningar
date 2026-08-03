@@ -1,0 +1,36 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com; frame-src https://www.youtube-nocookie.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; manifest-src 'self'; worker-src 'self';
+
+/vanner/*
+  X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+
+/vanner.html
+  X-Robots-Tag: noindex, nofollow
+
+/admin.html
+  X-Robots-Tag: noindex, nofollow
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/vanner.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/admin.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/vanner/*
+  Cache-Control: no-cache, must-revalidate
+
+/admin/*
+  Cache-Control: no-cache, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate

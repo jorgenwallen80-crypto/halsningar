@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 190" role="img" aria-labelledby="title desc">
+  <title id="title">Mjuk blomsterkvist</title>
+  <desc id="desc">En stiliserad bukett med blommor, blad och små bär i salviagrönt, puderrosa och varmt gult.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M179 171c-2-36-4-67 6-101M177 150c-25-22-48-39-77-51M181 143c27-18 51-35 80-43M180 123c-16-28-28-48-51-66M183 119c20-28 34-47 61-60" stroke="#6f9f80" stroke-width="3.2"/>
+    <path d="M105 102c-16-4-29 2-38 16 18 2 31-3 38-16Z" fill="#a8cfb4" stroke="#6f9f80" stroke-width="2.2"/>
+    <path d="M127 126c-16 2-28 11-34 26 18-4 29-12 34-26Z" fill="#c8dfcb" stroke="#7ca98a" stroke-width="2.2"/>
+    <path d="M241 101c15-7 30-4 42 8-16 6-30 3-42-8Z" fill="#9fc9ac" stroke="#6f9f80" stroke-width="2.2"/>
+    <path d="M224 129c14-3 27 2 37 15-16 3-28-2-37-15Z" fill="#c9dfcc" stroke="#7ca98a" stroke-width="2.2"/>
+    <path d="M147 91c-13-7-20-18-21-33 15 7 22 18 21 33Z" fill="#b8d7bd" stroke="#729f80" stroke-width="2.2"/>
+    <path d="M218 88c13-8 19-20 18-35-15 8-21 20-18 35Z" fill="#b8d7bd" stroke="#729f80" stroke-width="2.2"/>
+  </g>
+  <g stroke="#7ea58a" stroke-width="2" stroke-linecap="round">
+    <path d="M95 99 69 79M78 88 55 87M82 89 72 68M267 100l28-21M281 89l23 1M280 89l11-20" fill="none"/>
+  </g>
+  <g fill="#f3c47b" stroke="#c6904b" stroke-width="1.5">
+    <circle cx="69" cy="79" r="5"/><circle cx="55" cy="87" r="4.5"/><circle cx="72" cy="68" r="4.2"/>
+    <circle cx="295" cy="79" r="5"/><circle cx="304" cy="90" r="4.5"/><circle cx="291" cy="69" r="4.2"/>
+  </g>
+  <g transform="translate(177 58)">
+    <g fill="#f7cfda" stroke="#c9899c" stroke-width="2.2">
+      <ellipse rx="18" ry="31" transform="rotate(0) translate(0 -13)"/>
+      <ellipse rx="18" ry="31" transform="rotate(60) translate(0 -13)"/>
+      <ellipse rx="18" ry="31" transform="rotate(120) translate(0 -13)"/>
+    </g>
+    <circle r="14" fill="#f2bd62" stroke="#c6923d" stroke-width="2"/>
+    <g fill="#fff3c9"><circle cx="-5" cy="-3" r="2.2"/><circle cx="5" cy="-4" r="2.1"/><circle cx="1" cy="5" r="2.4"/></g>
+  </g>
+  <g transform="translate(114 54) scale(.72)">
+    <g fill="#fbdfa0" stroke="#cf9f4d" stroke-width="2.6">
+      <ellipse rx="17" ry="28" transform="rotate(0) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(72) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(144) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(216) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(288) translate(0 -12)"/>
+    </g>
+    <circle r="12" fill="#d89b43"/>
+  </g>
+  <g transform="translate(248 57) scale(.68)">
+    <g fill="#d5e5cb" stroke="#7ea58a" stroke-width="2.7">
+      <ellipse rx="17" ry="28" transform="rotate(0) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(72) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(144) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(216) translate(0 -12)"/><ellipse rx="17" ry="28" transform="rotate(288) translate(0 -12)"/>
+    </g>
+    <circle r="12" fill="#f0c36e" stroke="#c99845" stroke-width="2"/>
+  </g>
+  <g fill="#fff" opacity=".65"><circle cx="180" cy="20" r="3"/><circle cx="322" cy="111" r="2.5"/><circle cx="39" cy="119" r="2"/></g>
+</svg>

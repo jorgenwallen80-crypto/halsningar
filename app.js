@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const config = window.HANDELSER_CONFIG;
+  const config = window.HANDELSER_CONFIG || {};
   const dataApi = window.HandelserData;
   const icons = window.HandelserIcons;
   const sudokuApi = window.HandelserSudoku;
@@ -14,7 +14,6 @@
   const loginStatus = $('viewer-login-status');
   const timeline = $('timeline-container');
   const dateHeader = $('date-header');
-  const welcomeCopy = $('welcome-copy');
   const recipientGreeting = $('recipient-greeting');
   const progressText = $('progress-text');
   const progressNumber = $('progress-number');
@@ -23,6 +22,16 @@
   const nextMessage = $('next-message');
   const toast = $('toast');
   const lockButton = $('lock-app-btn');
+
+  if (!dataApi || typeof dataApi.getTimeline !== 'function' || !icons || !sudokuApi) {
+    if (appShell) appShell.hidden = true;
+    if (gate) gate.hidden = false;
+    if (loginStatus) {
+      loginStatus.textContent = 'Appens filer kunde inte läsas in. Ladda om sidan efter att publiceringen är klar.';
+      loginStatus.className = 'form-status error';
+    }
+    return;
+  }
 
   const REMEMBER_KEY = 'handelser_viewer_pin';
   const SESSION_KEY = 'handelser_viewer_pin_session';
@@ -41,7 +50,7 @@
   ];
 
   let viewerPin = '';
-  let presentation = {recipient_name:'',welcome_message:'Här väntar små händelser att öppna när du vill och orkar.'};
+  let presentation = {recipient_name:''};
   let memories = [];
   let previousUnlockedIds = new Set();
   let didInitialLoad = false;
@@ -144,9 +153,7 @@
     const now=new Date(nowMs());
     dateHeader.textContent=now.toLocaleDateString('sv-SE',{timeZone:'Europe/Stockholm',weekday:'long',day:'numeric',month:'long'});
     const name=String(presentation?.recipient_name || config.recipientName || '').trim();
-    const message=String(presentation?.welcome_message || '').trim() || 'Här väntar små händelser att öppna när du vill och orkar.';
     recipientGreeting.textContent=name?`Hej ${name}`:'Hej';
-    welcomeCopy.textContent=message;
   }
   function updateProgress() {
     const todays=memories.filter((item)=>dayKey(item.unlock_at)===dayKey(nowMs()));

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const config = window.HANDELSER_CONFIG;
+  const config = window.HANDELSER_CONFIG || {};
   const dataApi = window.HandelserData;
   const icons = window.HandelserIcons;
   const autoLoginPanel = document.getElementById('admin-auto-login-panel');
@@ -21,10 +21,8 @@
   const dailyLimitInput = document.getElementById('daily-limit-input');
   const dailyLimitStatus = document.getElementById('daily-limit-status');
   const recipientNameInput = document.getElementById('recipient-name-input');
-  const welcomeMessageInput = document.getElementById('welcome-message-input');
   const presentationStatus = document.getElementById('presentation-status');
   const previewName = document.getElementById('admin-preview-name');
-  const previewMessage = document.getElementById('admin-preview-message');
   const deleteAllDialog = document.getElementById('delete-all-dialog');
   const deleteAllForm = document.getElementById('delete-all-form');
   const deleteAllStatus = document.getElementById('delete-all-status');
@@ -33,6 +31,16 @@
   let editing = null;
   let adminQuizCount = 1;
   let toastTimer = null;
+
+  if (!dataApi || typeof dataApi.verifyAdmin !== 'function' || !icons) {
+    if (autoLoginPanel) autoLoginPanel.hidden = true;
+    if (loginPanel) loginPanel.hidden = false;
+    if (loginStatus) {
+      loginStatus.textContent = 'Appens filer kunde inte läsas in. Ladda om sidan efter att publiceringen är klar.';
+      loginStatus.className = 'form-status error';
+    }
+    return;
+  }
 
   document.getElementById('admin-mode-badge').textContent = config.mode==='local' ? 'Lokalt testläge' : 'Säker livekoppling';
   document.getElementById('local-tools').hidden = config.mode!=='local';
@@ -123,16 +131,13 @@
 
   function renderPresentationPreview() {
     const name=String(recipientNameInput.value || '').trim();
-    const message=String(welcomeMessageInput.value || '').trim() || 'Här väntar små händelser att öppna när du vill och orkar.';
     previewName.textContent=name?`Hej ${name}`:'Hej';
-    previewMessage.textContent=message;
   }
 
   async function loadPresentation() {
     try {
       const value=await dataApi.getAdminPresentation(adminPin);
       recipientNameInput.value=String(value?.recipient_name || '');
-      welcomeMessageInput.value=String(value?.welcome_message || '');
       renderPresentationPreview();
       setStatus(presentationStatus,'');
     } catch(error) { setStatus(presentationStatus,error.message,'error'); }
@@ -325,15 +330,14 @@
     await loadDashboard();
   });
   recipientNameInput.addEventListener('input',renderPresentationPreview);
-  welcomeMessageInput.addEventListener('input',renderPresentationPreview);
   document.getElementById('presentation-form').addEventListener('submit',async(event)=>{
     event.preventDefault();
     setStatus(presentationStatus,'Sparar...');
     try {
-      await dataApi.updateAdminPresentation(adminPin,{recipient_name:recipientNameInput.value,welcome_message:welcomeMessageInput.value});
+      await dataApi.updateAdminPresentation(adminPin,{recipient_name:recipientNameInput.value,welcome_message:''});
       renderPresentationPreview();
-      setStatus(presentationStatus,'Välkomsthälsningen är sparad.','success');
-      showToast('Välkomsthälsningen uppdaterades');
+      setStatus(presentationStatus,'Namnet är sparat.','success');
+      showToast('Namnet uppdaterades');
     } catch(error) { setStatus(presentationStatus,error.message,'error'); }
   });
   document.getElementById('daily-limit-form').addEventListener('submit',async(event)=>{event.preventDefault();setStatus(dailyLimitStatus,'Sparar...');try{await dataApi.updateAdminSettings(adminPin,{daily_limit:Number(dailyLimitInput.value)});setStatus(dailyLimitStatus,`Gränsen är nu ${Number(dailyLimitInput.value)} per dag.`,'success');showToast('Dagens gräns uppdaterades');}catch(error){setStatus(dailyLimitStatus,error.message,'error');}});
