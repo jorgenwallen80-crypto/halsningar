@@ -26,6 +26,9 @@
   const imagePreview = $('image-preview');
   const imageSizeStatus = $('image-size-status');
   const dailyStatus = $('daily-limit-status');
+  const messageInput = $('memory-message');
+  const emojiToggle = $('emoji-toggle');
+  const emojiPicker = $('emoji-picker');
 
   const TOKEN_KEY = 'handelser_contributor_token';
   const NAME_KEY = 'handelser_friend_name';
@@ -89,6 +92,31 @@
       setTimeout(() => { toast.hidden = true; },250);
     },3000);
   }
+  const messageEmojis = ['💚','❤️','🫶','🥰','😊','🤗','✨','🌸','🌿','☀️','🌈','💪','😂','🎵','☕','🙏'];
+  function insertEmoji(value) {
+    const start=Number.isFinite(messageInput.selectionStart)?messageInput.selectionStart:messageInput.value.length;
+    const end=Number.isFinite(messageInput.selectionEnd)?messageInput.selectionEnd:start;
+    const nextLength=messageInput.value.length-(end-start)+value.length;
+    if(nextLength>messageInput.maxLength){showToast('Meddelandet har nått maxlängden');return;}
+    messageInput.focus();
+    if(typeof messageInput.setRangeText==='function') messageInput.setRangeText(value,start,end,'end');
+    else messageInput.value=`${messageInput.value.slice(0,start)}${value}${messageInput.value.slice(end)}`;
+    messageInput.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  function setEmojiPicker(open) {
+    emojiPicker.hidden=!open;
+    emojiToggle.setAttribute('aria-expanded',String(open));
+    emojiToggle.classList.toggle('active',open);
+  }
+  messageEmojis.forEach((value)=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='emoji-choice';
+    button.textContent=value;
+    button.setAttribute('aria-label',`Lägg till ${value}`);
+    button.addEventListener('click',()=>{insertEmoji(value);setEmojiPicker(false);});
+    emojiPicker.appendChild(button);
+  });
   function localDateTimeValue(date) {
     const value = new Date(date);
     return new Date(value.getTime()-value.getTimezoneOffset()*60000).toISOString().slice(0,16);
@@ -227,6 +255,29 @@
       image.src = objectUrl;
     });
   }
+  function dataUrlToBlob(dataUrl) {
+    const parts=String(dataUrl).split(',');
+    const match=/^data:([^;]+);base64$/.exec(parts[0] || '');
+    if(!match || !parts[1]) throw new Error('Bilden kunde inte komprimeras');
+    const binary=atob(parts[1]);
+    const bytes=new Uint8Array(binary.length);
+    for(let index=0;index<binary.length;index+=1) bytes[index]=binary.charCodeAt(index);
+    return new Blob([bytes],{type:match[1]});
+  }
+  function canvasToJpegBlob(canvas,quality) {
+    if(typeof canvas.toBlob!=='function') return Promise.resolve(dataUrlToBlob(canvas.toDataURL('image/jpeg',quality)));
+    return new Promise((resolve,reject)=>{
+      canvas.toBlob((blob)=>blob?resolve(blob):reject(new Error('Bilden kunde inte komprimeras')),'image/jpeg',quality);
+    });
+  }
+  function blobToDataUrl(blob) {
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(String(reader.result || ''));
+      reader.onerror=()=>reject(new Error('Förhandsvisningen kunde inte skapas'));
+      reader.readAsDataURL(blob);
+    });
+  }
   async function compressImage(file) {
     if (!file) return '';
     if (!file.type.startsWith('image/')) throw new Error('Filen verkar inte vara en bild');
@@ -240,22 +291,43 @@
     if (!width || !height) throw new Error('Bilden saknar läsbara dimensioner');
     const maxDimension = Number(config.maxImageDimension || 1400);
     const ratio = Math.min(1,maxDimension/Math.max(width,height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1,Math.round(width*ratio)); canvas.height = Math.max(1,Math.round(height*ratio));
-    const context = canvas.getContext('2d',{alpha:false});
+    let canvas = document.createElement('canvas');
+    canvas.width = Math.max(1,Math.round(width*ratio));
+    canvas.height = Math.max(1,Math.round(height*ratio));
+    let context = canvas.getContext('2d',{alpha:false});
     if (!context) throw new Error('Webbläsaren kunde inte förbereda bilden');
-    context.fillStyle = '#ffffff'; context.fillRect(0,0,canvas.width,canvas.height); context.drawImage(image,0,0,canvas.width,canvas.height);
+    context.fillStyle = '#ffffff';
+    context.fillRect(0,0,canvas.width,canvas.height);
+    context.drawImage(image,0,0,canvas.width,canvas.height);
     if (shouldClose) image.close();
+
     const maxBytes = Number(config.maxImageBytes || 360000);
-    let quality = .82; let dataUrl = canvas.toDataURL('image/jpeg',quality);
-    while (Math.ceil(dataUrl.length*.75)>maxBytes && quality>.38) { quality -= .07; dataUrl = canvas.toDataURL('image/jpeg',quality); }
-    while (Math.ceil(dataUrl.length*.75)>maxBytes && canvas.width>720 && canvas.height>720) {
-      const smaller=document.createElement('canvas'); smaller.width=Math.max(1,Math.round(canvas.width*.86)); smaller.height=Math.max(1,Math.round(canvas.height*.86));
-      const smallerContext=smaller.getContext('2d',{alpha:false}); smallerContext.fillStyle='#ffffff'; smallerContext.fillRect(0,0,smaller.width,smaller.height); smallerContext.drawImage(canvas,0,0,smaller.width,smaller.height);
-      canvas.width=smaller.width; canvas.height=smaller.height; context.drawImage(smaller,0,0); quality=.58; dataUrl=canvas.toDataURL('image/jpeg',quality);
+    let quality = .82;
+    let blob = await canvasToJpegBlob(canvas,quality);
+    while (blob.size>maxBytes && quality>.38) {
+      quality=Math.max(.38,quality-.07);
+      blob=await canvasToJpegBlob(canvas,quality);
     }
-    if (Math.ceil(dataUrl.length*.75)>maxBytes) throw new Error('Bilden är fortfarande för stor efter komprimering');
-    const blob = await (await fetch(dataUrl)).blob();
+    while (blob.size>maxBytes && Math.max(canvas.width,canvas.height)>720) {
+      const smaller=document.createElement('canvas');
+      smaller.width=Math.max(1,Math.round(canvas.width*.86));
+      smaller.height=Math.max(1,Math.round(canvas.height*.86));
+      const smallerContext=smaller.getContext('2d',{alpha:false});
+      if(!smallerContext) throw new Error('Webbläsaren kunde inte förbereda bilden');
+      smallerContext.fillStyle='#ffffff';
+      smallerContext.fillRect(0,0,smaller.width,smaller.height);
+      smallerContext.drawImage(canvas,0,0,smaller.width,smaller.height);
+      canvas=smaller;
+      context=smallerContext;
+      quality=.62;
+      blob=await canvasToJpegBlob(canvas,quality);
+      while(blob.size>maxBytes && quality>.38){
+        quality=Math.max(.38,quality-.06);
+        blob=await canvasToJpegBlob(canvas,quality);
+      }
+    }
+    if (blob.size>maxBytes) throw new Error('Bilden är fortfarande för stor efter komprimering');
+    const dataUrl=await blobToDataUrl(blob);
     return {dataUrl,blob};
   }
 
@@ -486,6 +558,9 @@
   document.querySelectorAll('input[name="fact-mode"]').forEach((radio)=>radio.addEventListener('change',updateFactChoiceUI));
   $('new-sudoku-btn').addEventListener('click',newSudoku); $('random-fact-btn').addEventListener('click',fetchRandomFact);
   $('unlock-date').addEventListener('change',scheduleDailyCheck); cancelEditButton.addEventListener('click',resetForm);
+  emojiToggle.addEventListener('click',()=>setEmojiPicker(emojiPicker.hidden));
+  document.addEventListener('click',(event)=>{if(!emojiPicker.hidden&&!event.target.closest('.emoji-tools'))setEmojiPicker(false);});
+  document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!emojiPicker.hidden)setEmojiPicker(false);});
   $('preview-memory-btn').addEventListener('click',()=>{ try{renderPreview();}catch(error){setStatus(formStatus,error.message,'error');} });
   $('close-preview-btn').addEventListener('click',()=>{previewPanel.hidden=true;});
 
