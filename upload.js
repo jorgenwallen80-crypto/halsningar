@@ -84,6 +84,24 @@
     $('form-title').textContent=copy.title;
     $('form-intro').textContent=copy.intro;
   }
+  function defaultMessageForType(type) {
+    return ({
+      image:'En bild till dig 💚',
+      quiz:'Ett litet quiz till dig',
+      youtube:'Ett klipp jag ville dela med dig',
+      sudoku:'Ett litet sudoku när du känner för det',
+      fact:'Lite fullständigt onödig kunskap för dagen'
+    })[type] || '';
+  }
+  function updateMessageRequirement(type) {
+    const optionalLabel=$('message-optional-label');
+    const helper=$('message-helper-text');
+    const optional=type!=='text';
+    messageInput.required=!optional;
+    if(optionalLabel)optionalLabel.hidden=!optional;
+    messageInput.placeholder=optional?'Skriv några personliga ord, eller lämna tomt så lägger appen in en liten standardhälsning...':'Skriv några personliga ord som visas tillsammans med händelsen...';
+    if(helper)helper.textContent=optional?'Frivilligt. Om du lämnar tomt används en varm liten standardtext.':'Meddelandet är själva hälsningen och behöver fyllas i.';
+  }
   function initials(name) {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
     return parts.length ? (parts[0][0]+(parts.length>1?parts[parts.length-1][0]:'')).toLocaleUpperCase('sv-SE') : '♥';
@@ -101,6 +119,27 @@
       toast.classList.remove('show');
       setTimeout(() => { toast.hidden = true; },250);
     },3000);
+  }
+  function showSaveCelebration(payload) {
+    let overlay=$('save-celebration-overlay');
+    if(!overlay){
+      overlay=el('div','save-celebration-overlay'); overlay.id='save-celebration-overlay'; overlay.hidden=true;
+      const card=el('section','save-celebration-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','save-celebration-title');
+      const bloom=el('div','save-celebration-bloom'); bloom.appendChild(icon('flower'));
+      const sparkles=el('div','save-celebration-sparkles'); ['✦','•','✧','•','✦'].forEach((value,index)=>{const bit=el('span','',value);bit.style.setProperty('--spark-index',String(index));bit.style.setProperty('--angle',`${index*72}deg`);sparkles.appendChild(bit);});
+      const title=el('h2','', 'Fint, den är sparad'); title.id='save-celebration-title';
+      const copy=el('p','save-celebration-copy','Din händelse är sparad och väntar på rätt ögonblick 💚');
+      const when=el('p','save-celebration-time'); when.id='save-celebration-time';
+      const close=el('button','primary-button button-with-icon'); close.type='button'; close.id='close-save-celebration'; close.append(icon('check'),document.createTextNode('Klart'));
+      card.append(sparkles,bloom,title,copy,when,close); overlay.appendChild(card); document.body.appendChild(overlay);
+      const closeOverlay=()=>{overlay.hidden=true;document.body.classList.remove('dialog-open');};
+      close.addEventListener('click',closeOverlay); overlay.addEventListener('click',(event)=>{if(event.target===overlay)closeOverlay();});
+      document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!overlay.hidden)closeOverlay();});
+    }
+    const when=overlay.querySelector('#save-celebration-time');
+    if(when)when.textContent=`Den öppnas ${formatUnlock(payload.unlock_at)}.`;
+    overlay.hidden=false; document.body.classList.add('dialog-open');
+    window.setTimeout(()=>overlay.querySelector('#close-save-celebration')?.focus(),0);
   }
   const fallbackEmojis = ['💚','❤️','🫶','🥰','😊','🤗','✨','🌸','🌿','☀️','🌈','💪','😂','🎵','☕','🙏','🎉','💐','🌻','🍀','⭐️','🩷','🤍','🤎','💙','😄','😌','😘','🙌','👍'];
   function insertEmoji(value) {
@@ -121,6 +160,7 @@
   function buildFallbackEmojiPicker() {
     if (!emojiPicker || emojiPicker.dataset.fallbackBuilt === 'true') return;
     emojiPicker.innerHTML = '';
+    emojiPicker.classList.add('emoji-picker-fallback');
     fallbackEmojis.forEach((value)=>{
       const button=document.createElement('button');
       button.type='button';
@@ -133,7 +173,12 @@
     emojiPicker.dataset.fallbackBuilt = 'true';
   }
   if (emojiPicker && emojiPicker.tagName && emojiPicker.tagName.toLowerCase() === 'emoji-picker' && window.customElements && window.customElements.whenDefined) {
-    window.customElements.whenDefined('emoji-picker').then(() => {
+    Promise.race([
+      window.customElements.whenDefined('emoji-picker').then(()=>true),
+      new Promise((resolve)=>window.setTimeout(()=>resolve(false),2800))
+    ]).then((ready) => {
+      if(!ready){buildFallbackEmojiPicker();return;}
+      emojiPicker.classList.remove('emoji-picker-fallback');
       emojiPicker.addEventListener('emoji-click', (event) => {
         const detail = event && event.detail ? event.detail : {};
         const value = detail.unicode || (detail.emoji && detail.emoji.unicode) || '';
@@ -269,6 +314,7 @@
     document.querySelectorAll('.type-button').forEach((button) => button.classList.toggle('active',button.dataset.type===type));
     document.querySelectorAll('.type-fields').forEach((group) => { group.hidden = group.dataset.fields!==type; });
     updateFormCopy(type);
+    updateMessageRequirement(type);
     previewPanel.hidden = true;
     if (type==='sudoku') renderSudokuGrid($('sudoku-editor-grid'),currentSudoku.puzzle,false);
     if (type==='fact' && !currentFact && friendPin) fetchRandomFact();
@@ -365,10 +411,11 @@
     const name = $('friend-name').value.trim();
     const unlockValue = $('unlock-date').value;
     const title = $('memory-title').value.trim();
-    const body = $('memory-message').value.trim();
+    const bodyInput = $('memory-message').value.trim();
+    const body = bodyInput || defaultMessageForType(currentType);
     if (!allowIncomplete && !name) throw new Error('Skriv ditt namn');
     if (!allowIncomplete && !unlockValue) throw new Error('Välj datum och tid');
-    if (!allowIncomplete && !body) throw new Error('Skriv ett personligt meddelande');
+    if (!allowIncomplete && currentType==='text' && !bodyInput) throw new Error('Skriv ett personligt meddelande');
     const payload = {
       friend_name:name || 'Din vän',unlock_at:unlockValue?new Date(unlockValue).toISOString():new Date().toISOString(),content_type:currentType,
       title,body,image_data:'',image_blob:null,image_path:'',previous_image_path:previousImagePath,youtube_id:'',quiz_question:'',quiz_options:[],quiz_answer:'',quiz_explanation:'',extra_data:{}
@@ -639,9 +686,11 @@
     event.preventDefault(); submitButton.disabled=true; setStatus(formStatus,editingId?'Sparar ändringarna...':'Förbereder händelsen...');
     try {
       const payload=collectPayload(); localStorage.setItem(NAME_KEY,payload.friend_name);
-      if(editingId){ await dataApi.updateMemory(friendPin,contributorToken,editingId,payload); showToast('Ändringarna är sparade'); }
-      else { await dataApi.addMemory(friendPin,contributorToken,payload); showToast(`Din händelse väntar till ${formatUnlock(payload.unlock_at)}`); }
+      const wasEditing=Boolean(editingId);
+      if(wasEditing){ await dataApi.updateMemory(friendPin,contributorToken,editingId,payload); }
+      else { await dataApi.addMemory(friendPin,contributorToken,payload); }
       resetForm(); setStatus(formStatus,`Sparat. Den öppnas ${formatUnlock(payload.unlock_at)}.`,'success');
+      if(wasEditing)showToast('Ändringarna är sparade'); else showSaveCelebration(payload);
     } catch(error){ setStatus(formStatus,error.message,'error'); }
     finally { submitButton.disabled=false; }
   });

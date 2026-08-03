@@ -81,13 +81,13 @@
             <input class="text-input" id="memory-title" maxlength="100" placeholder="Till exempel En liten paus från oss">
           </div>
           <div class="field message-field">
-            <label for="memory-message">Ditt meddelande</label>
+            <label for="memory-message">Ditt meddelande <span class="optional-label" id="message-optional-label" hidden>frivilligt</span></label>
             <textarea class="textarea" id="memory-message" maxlength="3000" placeholder="Skriv några personliga ord som visas tillsammans med händelsen..." required></textarea>
             <div class="emoji-tools">
               <button class="emoji-toggle button-with-icon" id="emoji-toggle" type="button" aria-expanded="false" aria-controls="emoji-picker"><span data-icon="smile"></span><span>Lägg till emoji</span></button>
               <emoji-picker class="emoji-picker native-emoji-picker" id="emoji-picker" role="group" aria-label="Välj emoji" hidden></emoji-picker>
             </div>
-            <small>Det visas även tillsammans med bild, quiz, klipp, sudoku eller fakta.</small>
+            <small id="message-helper-text">Det visas även tillsammans med bild, quiz, klipp, sudoku eller fakta.</small>
           </div>
 
           <div class="type-fields type-note" data-fields="text">

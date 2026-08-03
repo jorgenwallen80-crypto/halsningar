@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Händelser",
   "short_name": "Händelser",
-  "description": "Små privata händelser att se fram emot under dagen.",
+  "description": "Små privata händelser, varma överraskningar och ljuspunkter att se fram emot.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,8 +10,23 @@
   "background_color": "#f4faf5",
   "theme_color": "#82be9e",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

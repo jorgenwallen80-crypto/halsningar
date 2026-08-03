@@ -103,7 +103,18 @@
             <h2 style="margin:0">Alla händelser</h2>
             <p class="panel-intro" style="margin:5px 0 0">Även framtida innehåll visas här eftersom detta är admin.</p>
           </div>
-          <button class="ghost-button button-with-icon" id="refresh-admin-btn" type="button"><span data-icon="refresh"></span><span>Uppdatera</span></button>
+          <div class="admin-list-header-actions">
+            <button class="ghost-button button-with-icon" id="toggle-selection-btn" type="button" aria-expanded="false"><span data-icon="check"></span><span>Välj flera</span></button>
+            <button class="ghost-button button-with-icon" id="refresh-admin-btn" type="button"><span data-icon="refresh"></span><span>Uppdatera</span></button>
+          </div>
+        </div>
+        <div class="admin-selection-toolbar" id="admin-selection-toolbar" hidden>
+          <label class="admin-select-all"><input id="select-all-items" type="checkbox"><span>Välj alla</span></label>
+          <strong id="selected-items-count">0 valda</strong>
+          <div class="admin-selection-actions">
+            <button class="ghost-button compact-button" id="cancel-selection-btn" type="button">Avbryt</button>
+            <button class="danger-button compact-button button-with-icon" id="delete-selected-btn" type="button" disabled><span data-icon="trash"></span><span>Radera valda</span></button>
+          </div>
         </div>
         <div class="submission-list" id="admin-list"></div>
       </section>
@@ -139,12 +150,38 @@
           <input class="text-input" id="edit-title" maxlength="100">
         </div>
         <div class="field">
-          <label for="edit-body">Personligt meddelande</label>
+          <label for="edit-body">Personligt meddelande <span class="optional-label" id="admin-message-optional-label" hidden>frivilligt</span></label>
           <textarea class="textarea" id="edit-body" maxlength="3000"></textarea>
         </div>
         <div class="field" id="edit-youtube-field" hidden>
           <label for="edit-youtube-id">Länk till videoklipp</label>
           <input class="text-input" id="edit-youtube-id" type="url" maxlength="1000" placeholder="https://...">
+        </div>
+        <div class="field" id="edit-image-field" hidden>
+          <label>Bild</label>
+          <label class="file-drop" for="admin-image-upload">
+            <input id="admin-image-upload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+            <span class="file-drop-icon" data-icon="upload"></span>
+            <strong>Byt bild</strong>
+            <span>Den komprimeras automatiskt innan den sparas</span>
+          </label>
+          <img class="image-preview admin-edit-image-preview" id="admin-edit-image-preview" alt="Förhandsvisning av bild" hidden>
+          <small id="admin-edit-image-status">Nuvarande bild behålls om du inte väljer en ny.</small>
+        </div>
+        <div class="field" id="edit-fact-field" hidden>
+          <label for="edit-fact-text">Onödig fakta</label>
+          <textarea class="textarea" id="edit-fact-text" maxlength="900" placeholder="Visste du att..."></textarea>
+        </div>
+        <div class="activity-editor admin-sudoku-editor" id="edit-sudoku-field" hidden>
+          <div class="activity-editor-heading">
+            <div>
+              <span class="activity-kicker"><span data-icon="sudoku"></span> LÄTT 4 × 4</span>
+              <strong>Sudokut som visas i händelsen</strong>
+            </div>
+            <button class="secondary-button compact-button button-with-icon" id="admin-new-sudoku-btn" type="button"><span data-icon="refresh"></span><span>Nytt sudoku</span></button>
+          </div>
+          <div class="sudoku-preview-grid" id="admin-sudoku-preview-grid" aria-label="Förhandsvisning av sudoku"></div>
+          <p>Ett nytt sudoku ersätter det gamla när ändringarna sparas.</p>
         </div>
         <div id="edit-quiz-fields" hidden>
           <div class="field">
@@ -163,6 +200,22 @@
           <button class="primary-button button-with-icon" id="save-admin-edit-btn" type="submit"><span data-icon="check"></span><span>Spara ändringarna</span></button>
         </div>
         <p class="form-status" id="admin-edit-status" aria-live="polite"></p>
+      </form>
+    </section>
+  </div>
+
+  <div class="dialog-backdrop" id="delete-items-dialog" hidden>
+    <section class="dialog danger-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-items-title">
+      <div class="danger-dialog-icon" aria-hidden="true"><span data-icon="trash"></span></div>
+      <h2 id="delete-items-title">Radera händelsen?</h2>
+      <p id="delete-items-message">Detta går inte att ångra.</p>
+      <div class="delete-items-summary" id="delete-items-summary"></div>
+      <form id="delete-items-form" class="form-grid">
+        <div class="form-actions split">
+          <button class="ghost-button button-with-icon" id="cancel-delete-items-btn" type="button"><span data-icon="close"></span><span>Avbryt</span></button>
+          <button class="danger-button button-with-icon" id="confirm-delete-items-btn" type="submit"><span data-icon="trash"></span><span>Radera permanent</span></button>
+        </div>
+        <p class="form-status" id="delete-items-status" aria-live="polite"></p>
       </form>
     </section>
   </div>
@@ -193,6 +246,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <script defer src="../icons.js"></script>
   <script defer src="../config.js"></script>
+  <script defer src="../sudoku.js"></script>
   <script defer src="../data.js"></script>
   <script defer src="../pwa.js"></script>
   <script defer src="../admin.js"></script>

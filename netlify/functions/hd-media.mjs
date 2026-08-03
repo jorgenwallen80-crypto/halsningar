@@ -135,6 +135,27 @@ export async function handler(event) {
       return response(200, { path, token: data.token });
     }
 
+    if (action === 'create-admin-upload') {
+      const contentType = String(body.contentType || '');
+      const size = Number(body.size || 0);
+      if (!ALLOWED_TYPES.has(contentType)) throw new Error('Bildformatet stöds inte');
+      if (!Number.isFinite(size) || size < 1 || size > MAX_BYTES) throw new Error('Bilden är för stor');
+      await verifyAdmin(client, body.pin);
+      await ensureBucket(client);
+      const path = `admin-${randomUUID()}.${extensionFor(contentType)}`;
+      const { data, error } = await client.storage.from(BUCKET).createSignedUploadUrl(path, { upsert: false });
+      if (error) throw error;
+      return response(200, { path, token: data.token });
+    }
+
+    if (action === 'cleanup-admin-upload') {
+      await verifyAdmin(client, body.pin);
+      const path = String(body.path || '');
+      if (!path || path.includes('/') || !/\.(jpg|png|webp)$/i.test(path)) throw new Error('Ogiltig bildsökväg');
+      await removePath(client, path);
+      return response(200, { ok: true });
+    }
+
     if (action === 'signed-image') {
       if (!validUuid(body.memoryId)) throw new Error('Bilden kunde inte hittas');
       await ensureBucket(client);

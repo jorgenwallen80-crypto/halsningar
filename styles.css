@@ -703,6 +703,7 @@ emoji-picker.emoji-picker {
   font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", "Segoe UI", system-ui, sans-serif;
 }
 .emoji-picker[hidden] { display:none !important; }
+.emoji-picker.emoji-picker-fallback { min-height:0; display:grid; grid-template-columns:repeat(8,38px); gap:5px; padding:10px; overflow:auto; }
 .emoji-choice {
   width:38px;
   height:38px;
@@ -721,4 +722,100 @@ emoji-picker.emoji-picker {
   .recipient-welcome { grid-template-columns: 34px minmax(0,1fr) 34px; min-height:96px; padding-inline:8px; }
   .welcome-flower { width:34px; height:34px; }
   .emoji-picker { width:min(320px,calc(100vw - 32px)); }
+  .emoji-picker.emoji-picker-fallback { grid-template-columns:repeat(6,40px); }
 }
+
+.admin-list-header-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.admin-selection-toolbar {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:0 0 14px;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(241,249,244,.88);
+}
+.admin-selection-toolbar[hidden] { display:none; }
+.admin-select-all { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:720; cursor:pointer; }
+.admin-select-all input { width:19px; height:19px; accent-color:var(--accent); }
+.admin-selection-toolbar > strong { font-size:13px; color:var(--accent-dark); }
+.admin-selection-actions { margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.admin-submission-card { position:relative; transition:border-color .18s ease, box-shadow .18s ease, background .18s ease; }
+.admin-submission-card.selection-enabled { cursor:pointer; padding-right:54px; }
+.admin-submission-card.selection-enabled .submission-actions { display:none; }
+.admin-submission-card.selection-enabled.selected { border-color:var(--line-strong); background:linear-gradient(145deg,#fff,#f2faf5); box-shadow:0 0 0 2px rgba(130,190,158,.16); }
+.admin-select-control { position:absolute; top:13px; right:13px; z-index:3; display:grid; place-items:center; width:28px; height:28px; cursor:pointer; }
+.admin-select-control input { position:absolute; opacity:0; pointer-events:none; }
+.admin-select-control span { width:24px; height:24px; border-radius:8px; border:2px solid var(--line-strong); background:#fff; display:grid; place-items:center; transition:.16s ease; }
+.admin-select-control span::after { content:'✓'; color:#fff; font-size:16px; font-weight:850; opacity:0; transform:scale(.7); transition:.16s ease; }
+.admin-select-control input:checked + span { background:var(--accent); border-color:var(--accent); }
+.admin-select-control input:checked + span::after { opacity:1; transform:scale(1); }
+.admin-select-control input:focus-visible + span { outline:3px solid rgba(130,190,158,.28); outline-offset:2px; }
+.delete-items-summary { display:grid; gap:7px; max-height:230px; overflow:auto; margin:14px 0 18px; padding:10px; border:1px solid var(--line); border-radius:13px; background:#fbfdfb; }
+.delete-summary-row { padding:8px 9px; border-radius:9px; background:#fff; border:1px solid rgba(205,227,212,.8); font-size:13px; line-height:1.35; color:var(--text); }
+.delete-summary-more { padding:5px 8px; font-size:12px; font-weight:750; color:var(--muted); text-align:center; }
+@media (max-width:620px) {
+  .admin-list-header-actions { width:100%; justify-content:stretch; }
+  .admin-list-header-actions .ghost-button { flex:1; }
+  .admin-selection-toolbar { align-items:flex-start; }
+  .admin-selection-actions { width:100%; margin-left:0; }
+  .admin-selection-actions button { flex:1; }
+}
+
+
+/* v7.0 · varm glädjeputs, öppningsögonblick och komplett redigering */
+.memory-card-inner { position:relative; }
+.timeline-item.unlocked { --type-accent:#8cc4a6; --type-soft:#eef8f1; --type-ink:#5f9b7b; }
+.timeline-item.type-text { --type-accent:#8cc4a6; --type-soft:#eef8f1; --type-ink:#5f9b7b; }
+.timeline-item.type-image { --type-accent:#90bfc9; --type-soft:#eef8fa; --type-ink:#517e88; }
+.timeline-item.type-quiz { --type-accent:#d9b958; --type-soft:#fff9e7; --type-ink:#8e7127; }
+.timeline-item.type-youtube { --type-accent:#dba096; --type-soft:#fff2ef; --type-ink:#9a655c; }
+.timeline-item.type-sudoku { --type-accent:#9aadd2; --type-soft:#f2f4fb; --type-ink:#6679a6; }
+.timeline-item.type-fact { --type-accent:#c7a26c; --type-soft:#fff6e7; --type-ink:#8a692f; }
+.timeline-item.unlocked .memory-card {
+  border-color:color-mix(in srgb,var(--type-accent) 35%,var(--line));
+  background:radial-gradient(circle at 92% 14%,color-mix(in srgb,var(--type-soft) 72%,transparent),transparent 34%),linear-gradient(145deg,#fff 0%,var(--type-soft) 140%);
+}
+.timeline-item.unlocked .memory-card::before { background:var(--type-accent); }
+.timeline-item.unlocked .card-type { background:var(--type-soft); color:var(--type-ink); }
+.timeline-item.unlocked .card-time { color:var(--type-ink); }
+.memory-card-inner > :not(.type-joy-mark) { position:relative; z-index:1; }
+.type-joy-mark { position:absolute; right:12px; bottom:8px; z-index:0; width:58px; height:58px; display:grid; place-items:center; color:var(--type-accent); opacity:.1; transform:rotate(-8deg); pointer-events:none; }
+.type-joy-mark .ui-icon { width:42px; height:42px; }
+.timeline-item.ready .memory-card.is-opening { pointer-events:none; animation:opening-card .62s cubic-bezier(.2,.8,.2,1) both; }
+.timeline-item.ready .memory-card.is-opening .mystery-orb { animation:opening-orb .62s ease both; }
+.open-particles { position:absolute; inset:0; z-index:8; pointer-events:none; overflow:hidden; }
+.open-particles span { position:absolute; left:50%; top:52%; color:#79b995; font-size:18px; opacity:0; animation:opening-particle .62s ease-out forwards; animation-delay:calc(var(--particle-index) * 22ms); }
+.joyful-empty-state { position:relative; overflow:hidden; padding:32px 22px; border-style:solid; background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.98),transparent 50%),linear-gradient(155deg,#f7fcf8,#eaf6ee); }
+.joyful-empty-state::before,.joyful-empty-state::after { content:'✦'; position:absolute; color:rgba(95,155,123,.25); font-size:18px; animation:soft-twinkle 3.4s ease-in-out infinite; }
+.joyful-empty-state::before { left:20%; top:28px; }
+.joyful-empty-state::after { right:18%; top:56px; animation-delay:1.2s; }
+.joyful-empty-state h2 { margin:12px 0 6px; color:var(--text); font-size:19px; font-weight:680; letter-spacing:-.02em; }
+.joyful-empty-state p { margin:0; }
+.empty-flower-mark { width:78px; height:78px; display:grid; place-items:center; margin:0 auto; border-radius:26px; background:rgba(255,255,255,.82); border:1px solid rgba(205,227,212,.9); box-shadow:0 12px 32px rgba(60,91,73,.08); animation:gentle-bloom 4.2s ease-in-out infinite; }
+.empty-flower-mark img { width:58px; height:58px; object-fit:contain; }
+.save-celebration-overlay { position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:22px; background:rgba(36,57,46,.28); backdrop-filter:blur(8px); }
+.save-celebration-card { position:relative; width:min(100%,390px); overflow:hidden; padding:30px 24px 24px; border:1px solid rgba(205,227,212,.95); border-radius:28px; background:radial-gradient(circle at 50% 0%,#fff,transparent 46%),linear-gradient(155deg,#f8fcf9,#e8f5ec); box-shadow:0 24px 80px rgba(45,66,55,.18); text-align:center; animation:celebration-in .48s cubic-bezier(.2,.8,.2,1) both; }
+.save-celebration-bloom { width:74px; height:74px; display:grid; place-items:center; margin:0 auto 14px; border-radius:24px; background:#fff; border:1px solid var(--line); color:var(--accent-dark); box-shadow:0 12px 28px rgba(60,91,73,.1); animation:celebration-bloom 1.8s ease-in-out infinite; }
+.save-celebration-bloom .ui-icon { width:38px; height:38px; }
+.save-celebration-card h2 { margin:0 0 8px; font-size:24px; letter-spacing:-.03em; }
+.save-celebration-copy { margin:0 auto 8px; max-width:300px; color:var(--text-soft); font-size:16px; line-height:1.55; }
+.save-celebration-time { margin:0 0 20px; color:var(--accent-dark); font-size:13px; font-weight:700; }
+.save-celebration-card .primary-button { margin:0 auto; }
+.save-celebration-sparkles { position:absolute; inset:0; pointer-events:none; }
+.save-celebration-sparkles span { position:absolute; left:50%; top:31%; color:rgba(95,155,123,.5); font-size:18px; transform:rotate(var(--angle)) translateY(-64px); animation:soft-twinkle 2.4s ease-in-out infinite; animation-delay:calc(var(--spark-index) * 180ms); }
+.admin-edit-image-preview { margin-top:12px; border-radius:16px; border:1px solid var(--line); max-height:300px; object-fit:cover; }
+.admin-sudoku-editor { margin-top:0; }
+.admin-sudoku-editor .sudoku-preview-grid { max-width:250px; margin:16px auto 4px; }
+.admin-sudoku-editor .sudoku-cell { display:grid; place-items:center; }
+@keyframes opening-card { 0%{transform:scale(1);box-shadow:0 14px 38px rgba(76,125,99,.12)} 45%{transform:scale(1.025);box-shadow:0 20px 54px rgba(76,125,99,.24)} 100%{transform:scale(.985);opacity:.12;filter:brightness(1.08)} }
+@keyframes opening-orb { 0%{transform:rotate(-3deg) scale(1)} 45%{transform:rotate(7deg) scale(1.16)} 100%{transform:rotate(0) scale(.9);opacity:.2} }
+@keyframes opening-particle { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 20%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% - 72px)) scale(1.25) rotate(18deg)} }
+@keyframes soft-twinkle { 0%,100%{opacity:.25;transform:scale(.85)} 50%{opacity:.7;transform:scale(1.1)} }
+@keyframes gentle-bloom { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-3px) rotate(1deg)} }
+@keyframes celebration-in { from{opacity:0;transform:translateY(14px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes celebration-bloom { 0%,100%{transform:scale(1) rotate(-2deg)} 50%{transform:scale(1.05) rotate(2deg)} }
+@media (prefers-reduced-motion:reduce){.empty-flower-mark,.save-celebration-bloom,.save-celebration-sparkles span,.joyful-empty-state::before,.joyful-empty-state::after{animation:none}.timeline-item.ready .memory-card.is-opening{animation:none}.open-particles{display:none}}
+@supports not (color:color-mix(in srgb,#fff,#000)) { .timeline-item.unlocked .memory-card { border-color:var(--line); } }

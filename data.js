@@ -274,6 +274,18 @@
     if (!path) return;
     await mediaRequest({action:'cleanup-upload',pin,contributorToken,path});
   }
+  async function uploadAdminImage(pin,blob) {
+    if (!(blob instanceof Blob) || !blob.size) throw new Error('Bilden saknas');
+    const prepared=await mediaRequest({action:'create-admin-upload',pin,contentType:blob.type || 'image/jpeg',size:blob.size});
+    const client=await initSupabase();
+    const {error}=await client.storage.from(IMAGE_BUCKET).uploadToSignedUrl(prepared.path,prepared.token,blob,{contentType:blob.type || 'image/jpeg',cacheControl:'3600'});
+    if(error){await mediaRequest({action:'cleanup-admin-upload',pin,path:prepared.path}).catch(()=>{});throw new Error(error.message || 'Bilden kunde inte laddas upp');}
+    return prepared.path;
+  }
+  async function cleanupAdminImage(pin,path) {
+    if(!path)return;
+    await mediaRequest({action:'cleanup-admin-upload',pin,path});
+  }
 
   window.HandelserData = {
     mode:config.mode || 'supabase',
@@ -491,16 +503,25 @@
         const index = store.memories.findIndex((item) => item.id===id);
         if (index<0) throw new Error('Händelsen kunde inte hittas');
         assertMemoryAllowed(store,payload,id);
-        store.memories[index] = normalizeMemory({...store.memories[index],...payload,id,updated_at:nowIso()});
+        const {image_blob,...safePayload}=payload;
+        store.memories[index] = normalizeMemory({...store.memories[index],...safePayload,id,updated_at:nowIso()});
         saveStore(store);
         return true;
       }
-      return rpc('hd_admin_update_memory',{
-        p_admin_pin:pin,p_id:id,p_friend_name:payload.friend_name,p_unlock_at:payload.unlock_at,p_content_type:payload.content_type,
-        p_title:payload.title || '',p_body:payload.body || '',p_image_path:payload.image_path || '',p_youtube_id:payload.youtube_id || '',
-        p_quiz_question:payload.quiz_question || '',p_quiz_options:payload.quiz_options || [],p_quiz_answer:payload.quiz_answer || '',p_quiz_explanation:payload.quiz_explanation || '',
-        p_extra_data:payload.extra_data || {}
-      });
+      const oldPath=payload.previous_image_path || payload.image_path || '';
+      let uploadedPath='';
+      let imagePath=payload.content_type==='image' ? (payload.image_path || oldPath) : '';
+      try{
+        if(payload.content_type==='image'&&payload.image_blob){uploadedPath=await uploadAdminImage(pin,payload.image_blob);imagePath=uploadedPath;}
+        const result=await rpc('hd_admin_update_memory',{
+          p_admin_pin:pin,p_id:id,p_friend_name:payload.friend_name,p_unlock_at:payload.unlock_at,p_content_type:payload.content_type,
+          p_title:payload.title || '',p_body:payload.body || '',p_image_path:imagePath,p_youtube_id:payload.youtube_id || '',
+          p_quiz_question:payload.quiz_question || '',p_quiz_options:payload.quiz_options || [],p_quiz_answer:payload.quiz_answer || '',p_quiz_explanation:payload.quiz_explanation || '',
+          p_extra_data:payload.extra_data || {}
+        });
+        if(oldPath&&oldPath!==imagePath)await cleanupAdminImage(pin,oldPath).catch(()=>{});
+        return result;
+      }catch(error){if(uploadedPath)await cleanupAdminImage(pin,uploadedPath).catch(()=>{});throw error;}
     },
     async adminDelete(pin,id) {
       if (config.mode==='local') {

@@ -40,13 +40,16 @@
   const FRIEND_REDIRECT_KEY = 'handelser_friend_redirect_pin';
   const ADMIN_REDIRECT_KEY = 'handelser_admin_redirect_pin';
   const mysteryIcons = ['gift','flower','leaf','heart','sun'];
-  const mysteryTitles = ['Något väntar här','En liten sak är på väg','Den här öppnas lite senare','Psst, något finns här','Snart visar den sig'];
+  const mysteryTitles = ['Något väntar här','En liten sak är på väg','Den här öppnas lite senare','Psst, något finns här','Snart visar den sig','En liten överraskning väntar','Någon har sparat ett ögonblick','Det här hör framtiden till'];
   const mysterySubtitles = [
     'Innehållet visar sig när tiden är inne.',
     'Du behöver bara vara nyfiken en liten stund till.',
     'Ingen brådska. Den blir redo när tiden är inne.',
     'Det kan vara stort, litet eller bara lite knasigt.',
-    'Innehållet öppnas när det är dags.'
+    'Innehållet öppnas när det är dags.',
+    'Någon tänkte på dig och valde just den här tiden.',
+    'En liten ljuspunkt ligger tryggt och väntar.',
+    'Rätt ögonblick kommer. Du behöver inte skynda.'
   ];
 
   let viewerPin = '';
@@ -104,7 +107,17 @@
     try { const value=JSON.parse(localStorage.getItem(OPENED_IDS_KEY)||'[]'); return new Set(Array.isArray(value)?value:[]); } catch (_) { return new Set(); }
   }
   function saveOpenedIds() { try { localStorage.setItem(OPENED_IDS_KEY,JSON.stringify(Array.from(openedIds))); } catch (_) {} }
-  function markOpened(id) { openedIds.add(id); saveOpenedIds(); renderTimeline(); updateProgress(); }
+  function markOpened(id,card) {
+    if(openedIds.has(id))return;
+    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!card||reduced){openedIds.add(id);saveOpenedIds();renderTimeline();updateProgress();return;}
+    if(card.classList.contains('is-opening'))return;
+    card.classList.add('is-opening');
+    const particles=el('div','open-particles');
+    ['✦','❋','•','✧','✦','•'].forEach((value,index)=>{const bit=el('span','',value);bit.style.setProperty('--particle-index',String(index));bit.style.setProperty('--x',`${(index-2.5)*28}px`);particles.appendChild(bit);});
+    card.appendChild(particles);
+    window.setTimeout(()=>{openedIds.add(id);saveOpenedIds();renderTimeline();updateProgress();},620);
+  }
   function waitParts(unlockAt) {
     const diff=Math.max(0,new Date(unlockAt).getTime()-nowMs());
     const totalMinutes=Math.max(0,Math.ceil(diff/60000));
@@ -210,7 +223,7 @@
     const stage=el('div','locked-stage ready-stage'); const orb=el('div','mystery-orb ready-orb'); orb.appendChild(icon('gift','mystery-icon')); stage.appendChild(orb);
     const copy=el('div','locked-copy'); copy.append(el('strong','','Redo att öppnas'),el('p','','Tryck när du känner för det. Den ligger kvar tills dess.')); stage.appendChild(copy); inner.appendChild(stage);
     const button=el('span','ready-open-label'); button.append(icon('sparkle'),document.createTextNode('Öppna händelsen')); inner.appendChild(button); card.appendChild(inner);
-    makeCardInteractive(card,()=>markOpened(memory.id),'Öppna händelsen'); item.appendChild(card); return item;
+    makeCardInteractive(card,()=>markOpened(memory.id,card),'Öppna händelsen'); item.appendChild(card); return item;
   }
 
   function appendMessage(memory,wrap) { if(memory.title)wrap.appendChild(el('h3','memory-title',memory.title)); if(memory.body)wrap.appendChild(el('p','memory-body',memory.body)); }
@@ -385,7 +398,9 @@
     const item=el('article',`timeline-item unlocked type-${memory.content_type}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
     const card=el('div','memory-card');
     if(memory.content_type==='youtube'&&(memory.youtube_id||memory.extra_data?.link_url||memory.extra_data?.media_url)) card.appendChild(createVideo(memory));
-    const inner=el('div','memory-card-inner'); inner.append(createTopline(memory),createSender(memory)); appendMessage(memory,inner); card.appendChild(inner);
+    const inner=el('div','memory-card-inner');
+    const joyMark=el('div','type-joy-mark'); joyMark.setAttribute('aria-hidden','true'); joyMark.appendChild(icon(typeIcon(memory.content_type)));
+    inner.append(createTopline(memory),createSender(memory)); appendMessage(memory,inner); inner.appendChild(joyMark); card.appendChild(inner);
     if(memory.content_type==='image'&&(memory.image_data||memory.image_path))card.appendChild(createImage(memory));
     if(memory.content_type==='quiz'){const wrap=el('div','card-content-block');wrap.appendChild(createQuiz(memory));card.appendChild(wrap);}
     if(memory.content_type==='sudoku'){const wrap=el('div','card-content-block activity-content-block');wrap.appendChild(createSudoku(memory));card.appendChild(wrap);}
@@ -395,7 +410,12 @@
 
   function renderTimeline() {
     timeline.innerHTML=''; timeline.setAttribute('aria-busy','false');
-    if(!memories.length){ const empty=el('div','empty-state'); const mark=el('div','empty-icon'); mark.appendChild(icon('flower')); empty.append(mark,el('p','','Det är lugnt här just nu. Nästa händelse dyker upp när någon har lagt in något.')); timeline.appendChild(empty); return; }
+    if(!memories.length){
+      const empty=el('div','empty-state joyful-empty-state');
+      const mark=el('div','empty-flower-mark'); const image=document.createElement('img'); image.src='flower-mark.svg'; image.alt=''; mark.appendChild(image);
+      empty.append(mark,el('h2','','Nästa lilla ljuspunkt kommer snart'),el('p','','Här samlas sådant som väntar på rätt ögonblick.'));
+      timeline.appendChild(empty); return;
+    }
     const groups=new Map(); memories.forEach((memory)=>{const key=dayKey(memory.unlock_at);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(memory);});
     const next=memories.find((item)=>!item.is_unlocked&&new Date(item.unlock_at).getTime()>nowMs()); const nextId=next?next.id:null; let index=0;
     groups.forEach((items)=>{ const section=el('section','day-group'); const heading=el('div','day-heading'); heading.appendChild(el('h2','',formatDay(items[0].unlock_at))); const waiting=items.filter((item)=>!item.is_unlocked).length; const ready=items.filter((item)=>item.is_unlocked&&!openedIds.has(item.id)).length; const opened=items.filter((item)=>item.is_unlocked&&openedIds.has(item.id)).length; let summary=`${items.length} ${items.length===1?'händelse':'händelser'}`; if(opened&&ready)summary=`${opened} öppnade, ${ready} redo`; else if(ready&&waiting)summary=`${ready} redo, ${waiting} väntar`; else if(ready)summary=`${ready} ${ready===1?'redo att öppnas':'redo att öppnas'}`; else if(waiting&&opened)summary=`${opened} öppnade, ${waiting} väntar`; else if(waiting)summary=`${waiting} ${waiting===1?'händelse väntar':'händelser väntar'}`; else if(opened)summary=`${opened} ${opened===1?'öppnad':'öppnade'}`; heading.appendChild(el('span','',summary)); section.appendChild(heading); items.forEach((memory)=>{section.appendChild(!memory.is_unlocked?createLockedCard(memory,index,memory.id===nextId):openedIds.has(memory.id)?createUnlockedCard(memory,index):createReadyCard(memory,index));index+=1;}); timeline.appendChild(section); });
