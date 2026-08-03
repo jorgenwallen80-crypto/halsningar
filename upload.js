@@ -102,7 +102,7 @@
       setTimeout(() => { toast.hidden = true; },250);
     },3000);
   }
-  const messageEmojis = ['💚','❤️','🫶','🥰','😊','🤗','✨','🌸','🌿','☀️','🌈','💪','😂','🎵','☕','🙏'];
+  const fallbackEmojis = ['💚','❤️','🫶','🥰','😊','🤗','✨','🌸','🌿','☀️','🌈','💪','😂','🎵','☕','🙏','🎉','💐','🌻','🍀','⭐️','🩷','🤍','🤎','💙','😄','😌','😘','🙌','👍'];
   function insertEmoji(value) {
     const start=Number.isFinite(messageInput.selectionStart)?messageInput.selectionStart:messageInput.value.length;
     const end=Number.isFinite(messageInput.selectionEnd)?messageInput.selectionEnd:start;
@@ -118,15 +118,34 @@
     emojiToggle.setAttribute('aria-expanded',String(open));
     emojiToggle.classList.toggle('active',open);
   }
-  messageEmojis.forEach((value)=>{
-    const button=document.createElement('button');
-    button.type='button';
-    button.className='emoji-choice';
-    button.textContent=value;
-    button.setAttribute('aria-label',`Lägg till ${value}`);
-    button.addEventListener('click',()=>{insertEmoji(value);setEmojiPicker(false);});
-    emojiPicker.appendChild(button);
-  });
+  function buildFallbackEmojiPicker() {
+    if (!emojiPicker || emojiPicker.dataset.fallbackBuilt === 'true') return;
+    emojiPicker.innerHTML = '';
+    fallbackEmojis.forEach((value)=>{
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='emoji-choice';
+      button.textContent=value;
+      button.setAttribute('aria-label',`Lägg till ${value}`);
+      button.addEventListener('click',()=>{insertEmoji(value);setEmojiPicker(false);});
+      emojiPicker.appendChild(button);
+    });
+    emojiPicker.dataset.fallbackBuilt = 'true';
+  }
+  if (emojiPicker && emojiPicker.tagName && emojiPicker.tagName.toLowerCase() === 'emoji-picker' && window.customElements && window.customElements.whenDefined) {
+    window.customElements.whenDefined('emoji-picker').then(() => {
+      emojiPicker.addEventListener('emoji-click', (event) => {
+        const detail = event && event.detail ? event.detail : {};
+        const value = detail.unicode || (detail.emoji && detail.emoji.unicode) || '';
+        if (value) {
+          insertEmoji(value);
+          setEmojiPicker(false);
+        }
+      });
+    }).catch(() => { buildFallbackEmojiPicker(); });
+  } else {
+    buildFallbackEmojiPicker();
+  }
   function localDateTimeValue(date) {
     const value = new Date(date);
     return new Date(value.getTime()-value.getTimezoneOffset()*60000).toISOString().slice(0,16);

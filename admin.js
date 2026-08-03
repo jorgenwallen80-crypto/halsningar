@@ -202,11 +202,14 @@
         copy.append(title,meta,preview,badges);
         top.append(typeMark,copy);
         card.appendChild(top);
-        if (item.content_type==='image' && item.image_path) {
+        if (item.content_type==='image' && (item.image_path || item.image_data)) {
           const imageWrap=document.createElement('button'); imageWrap.type='button'; imageWrap.className='admin-image-preview-button'; imageWrap.setAttribute('aria-label','Öppna bilden stort');
           const image=document.createElement('img'); image.className='admin-image-preview'; image.alt=`Bild från ${item.friend_name}`; image.loading='lazy';
           const loading=document.createElement('span'); loading.className='admin-image-loading'; loading.textContent='Hämtar bild...'; imageWrap.append(image,loading); card.appendChild(imageWrap);
-          dataApi.getAdminImageUrl(adminPin,item.id).then((url)=>{image.src=url; loading.remove(); imageWrap.addEventListener('click',()=>window.open(url,'_blank','noopener,noreferrer'));}).catch(()=>{loading.textContent='Bilden kunde inte hämtas'; imageWrap.disabled=true;});
+          Promise.resolve(item.image_data || dataApi.getAdminImageUrl(adminPin,item.id)).then((url)=>{
+            if (!url) throw new Error('Ingen bild');
+            image.src=url; loading.remove(); imageWrap.addEventListener('click',()=>window.open(url,'_blank','noopener,noreferrer'));
+          }).catch(()=>{loading.textContent='Bilden kunde inte hämtas'; imageWrap.disabled=true;});
         }
 
         const actions = document.createElement('div');

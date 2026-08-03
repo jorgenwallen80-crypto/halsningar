@@ -677,16 +677,32 @@ body.dialog-open { overflow:hidden; }
   z-index:12;
   left:0;
   top:42px;
-  display:grid;
-  grid-template-columns:repeat(8,38px);
-  gap:5px;
-  padding:10px;
+  width:min(360px,calc(100vw - 48px));
+  min-height:320px;
+  display:block;
+  padding:0;
   border:1px solid var(--line);
   border-radius:16px;
   background:rgba(255,255,255,.98);
   box-shadow:0 14px 36px rgba(45,66,55,.14);
+  overflow:hidden;
 }
-.emoji-picker[hidden] { display:none; }
+emoji-picker.emoji-picker {
+  --border-size: 0;
+  --border-radius: 0;
+  --background: #fff;
+  --button-active-background: rgba(140,196,166,.18);
+  --button-hover-background: rgba(140,196,166,.12);
+  --indicator-color: #8cc4a6;
+  --input-border-color: #cde3d4;
+  --input-border-radius: 12px;
+  --input-font-color: #2d4237;
+  --category-emoji-padding: 6px;
+  --category-emoji-size: 1.35rem;
+  --emoji-size: 1.45rem;
+  font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+.emoji-picker[hidden] { display:none !important; }
 .emoji-choice {
   width:38px;
   height:38px;
@@ -704,5 +720,5 @@ body.dialog-open { overflow:hidden; }
 @media (max-width:420px) {
   .recipient-welcome { grid-template-columns: 34px minmax(0,1fr) 34px; min-height:96px; padding-inline:8px; }
   .welcome-flower { width:34px; height:34px; }
-  .emoji-picker { grid-template-columns:repeat(4,40px); }
+  .emoji-picker { width:min(320px,calc(100vw - 32px)); }
 }
