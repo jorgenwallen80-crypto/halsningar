@@ -7,7 +7,7 @@ const ALLOWED_TYPES = new Set(['image/jpeg','image/png','image/webp']);
 const RPC_ALLOWLIST = new Set([
   'hd_add_memory','hd_admin_help_requests','hd_admin_memories','hd_admin_presentation','hd_admin_resolve_help',
   'hd_admin_settings','hd_admin_update_memory','hd_admin_update_presentation','hd_admin_update_settings','hd_check_quiz',
-  'hd_check_sudoku','hd_day_available','hd_day_capacity','hd_my_memories','hd_random_fact','hd_request_admin_help',
+  'hd_check_sudoku','hd_day_available','hd_day_capacity','hd_friend_timeline','hd_my_memories','hd_random_fact','hd_request_admin_help',
   'hd_server_clock','hd_sudoku_hint','hd_timeline','hd_update_memory','hd_verify_admin','hd_verify_friend','hd_viewer_presentation'
 ]);
 const requestWindows = new Map();
@@ -86,7 +86,7 @@ function isPinFailure(error) {
 
 function rpcPinScope(name) {
   if (/^hd_admin_/.test(name) || name === 'hd_verify_admin') return 'admin';
-  if (name === 'hd_verify_friend' || /^hd_(add_memory|update_memory|my_memories|day_available|day_capacity|random_fact|request_admin_help)$/.test(name)) return 'friend';
+  if (name === 'hd_verify_friend' || /^hd_(add_memory|update_memory|friend_timeline|my_memories|day_available|day_capacity|random_fact|request_admin_help)$/.test(name)) return 'friend';
   if (/^hd_(timeline|server_clock|viewer_presentation|check_quiz|check_sudoku|sudoku_hint)$/.test(name)) return 'viewer';
   return '';
 }

@@ -28,7 +28,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   background: radial-gradient(circle at 15% 0%, rgba(255,255,255,0.95), transparent 38%), linear-gradient(180deg, #f6fbf7 0%, var(--bg) 42%, #edf7f0 100%);
-  color: var(--text);
+  color: rgba(45,66,55,.86);
   font-family: Inter, ui-rounded, "SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -1024,3 +1024,59 @@ emoji-picker.emoji-picker {
 .toast-title{font-size:13px;line-height:1.25;color:var(--text)}
 .toast-detail{font-size:11px;line-height:1.35;color:var(--text-soft)}
 
+
+
+/* v7.3.5 passiv tidslinjeöversikt för vänner */
+.friend-page .friend-tabbar-three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.friend-page .friend-tabbar-three .tab-button { min-width:0; padding-inline:7px; font-size:12px; }
+.friend-page #friend-timeline-panel { padding:24px; background:rgba(255,255,255,.96); box-shadow:0 20px 55px rgba(60,91,73,.08); }
+.friend-timeline-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:4px; }
+.friend-timeline-heading h2 { margin:2px 0 0; }
+.friend-timeline-private { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:1px solid var(--line); border-radius:999px; background:var(--surface-soft); color:var(--text-faint); font-size:10px; font-weight:720; white-space:nowrap; }
+.friend-timeline-private .ui-icon { width:13px; height:13px; }
+.friend-timeline { position:relative; margin-top:24px; padding-left:30px; }
+.friend-timeline::before { content:''; position:absolute; top:18px; bottom:22px; left:10px; width:2px; border-radius:999px; background:linear-gradient(180deg,var(--accent),var(--line) 22%,var(--line) 88%,transparent); }
+.friend-day-group { margin-bottom:34px; }
+.friend-day-heading { position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 14px; padding:0 2px; }
+.friend-day-heading::before { content:''; position:absolute; left:-25px; top:6px; width:11px; height:11px; border:2px solid var(--line-strong); border-radius:50%; background:var(--bg); z-index:2; }
+.friend-day-heading h3 { margin:0; font-size:16px; font-weight:680; text-transform:capitalize; }
+.friend-day-heading span { color:var(--text-faint); font-size:11px; white-space:nowrap; }
+.friend-timeline-item { --overview-accent:#8cc4a6; --overview-soft:#edf7f0; --overview-ink:#5f9b7b; position:relative; margin-bottom:14px; }
+.friend-timeline-item.mystery-variant-2 { --overview-accent:#d8bd78; --overview-soft:#fff7df; --overview-ink:#8a7136; }
+.friend-timeline-item.mystery-variant-3 { --overview-accent:#d5aeb1; --overview-soft:#fff0f1; --overview-ink:#936b70; }
+.friend-timeline-item.mystery-variant-4 { --overview-accent:#91bcca; --overview-soft:#eaf6f8; --overview-ink:#5b818b; }
+.friend-timeline-node { position:absolute; left:-29px; top:21px; width:20px; height:20px; display:grid; place-items:center; border:2px solid var(--overview-accent); border-radius:50%; background:var(--bg); z-index:3; }
+.friend-timeline-node::after { content:''; width:6px; height:6px; border-radius:50%; background:var(--overview-accent); opacity:.72; }
+.friend-overview-card { position:relative; overflow:hidden; min-height:118px; border:1px solid color-mix(in srgb,var(--overview-accent) 45%,var(--line)); border-radius:var(--radius-lg); background:radial-gradient(circle at 84% 14%,rgba(255,255,255,.92),transparent 35%),linear-gradient(145deg,var(--overview-soft),#fbfdfb); box-shadow:none; pointer-events:none; user-select:none; }
+.friend-overview-top { display:flex; justify-content:flex-start; padding:15px 16px 0; }
+.friend-overview-time { display:inline-flex; align-items:center; gap:7px; color:var(--overview-ink); font-size:12px; font-weight:760; letter-spacing:.07em; }
+.friend-overview-time .ui-icon { width:15px; height:15px; }
+.friend-overview-body { display:grid; grid-template-columns:auto 1fr; align-items:center; gap:13px; padding:13px 16px 17px; }
+.friend-overview-orb { width:46px; height:46px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--overview-accent) 40%,#fff); border-radius:16px; background:rgba(255,255,255,.72); color:var(--overview-ink); transform:rotate(-3deg); }
+.friend-overview-orb .ui-icon { width:21px; height:21px; }
+.friend-overview-copy { position:relative; z-index:1; min-width:0; }
+.friend-overview-copy strong { display:block; margin-bottom:4px; font-size:14px; font-weight:660; }
+.friend-overview-copy p { margin:0; color:var(--text-faint); font-size:12px; line-height:1.42; }
+.friend-overview-motif { position:absolute; right:-5px; bottom:-4px; width:92px; height:76px; background:url('floral-corner.svg') right bottom / contain no-repeat; opacity:.18; filter:saturate(.72); }
+.friend-timeline-item.mystery-variant-2 .friend-overview-motif { filter:sepia(.16) saturate(.82) hue-rotate(-8deg); }
+.friend-timeline-item.mystery-variant-3 .friend-overview-motif { filter:hue-rotate(292deg) saturate(.7); transform:scaleX(-1) rotate(-5deg); }
+.friend-timeline-item.mystery-variant-4 .friend-overview-motif { filter:hue-rotate(35deg) saturate(.65); }
+.friend-timeline-empty { padding:30px 20px; border:1px dashed var(--line-strong); border-radius:var(--radius-lg); background:rgba(255,255,255,.56); text-align:center; }
+.friend-timeline-empty img { width:58px; height:58px; opacity:.72; }
+.friend-timeline-empty h3 { margin:10px 0 5px; font-size:17px; }
+.friend-timeline-empty p { margin:0; color:var(--text-soft); font-size:13px; line-height:1.5; }
+@media (max-width:460px) {
+  .friend-page .friend-tabbar-three { gap:4px; padding:5px; }
+  .friend-page .friend-tabbar-three .tab-button { min-height:44px; gap:4px; padding:7px 3px; font-size:10.5px; }
+  .friend-page .friend-tabbar-three .tab-button .ui-icon { width:15px; height:15px; }
+  .friend-timeline-heading { display:block; }
+  .friend-timeline-private { margin-top:10px; }
+  .friend-page #friend-timeline-panel { padding:20px 16px; }
+  .friend-timeline { padding-left:27px; }
+  .friend-overview-body { gap:11px; padding-inline:13px; }
+  .friend-overview-orb { width:42px; height:42px; }
+}
+@supports not (color:color-mix(in srgb,#fff,#000)) {
+  .friend-overview-card { border-color:var(--line); }
+  .friend-overview-orb { border-color:var(--line); }
+}

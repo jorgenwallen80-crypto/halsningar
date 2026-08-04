@@ -1,4 +1,4 @@
-const CACHE_NAME = 'handelser-v7.3.2';
+const CACHE_NAME = 'handelser-v7.3.5';
 const APP_SHELL = [
   './','./index.html','./vanner/','./admin/','./vanner.html','./admin.html',
   './styles.css','./icons.js','./config.js','./data.js','./app.js','./upload.js','./admin.js','./pwa.js',

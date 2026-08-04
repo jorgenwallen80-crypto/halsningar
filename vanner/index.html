@@ -47,9 +47,10 @@
     </section>
 
     <div id="friend-workspace" hidden>
-      <nav class="tabbar" aria-label="Vännernas vyer">
+      <nav class="tabbar friend-tabbar-three" aria-label="Vännernas vyer">
         <button class="tab-button active button-with-icon" type="button" data-tab="create"><span data-icon="plus"></span><span>Skapa nytt</span></button>
         <button class="tab-button button-with-icon" type="button" data-tab="mine"><span data-icon="list"></span><span>Mina bidrag</span></button>
+        <button class="tab-button button-with-icon" type="button" data-tab="timeline"><span data-icon="calendar"></span><span>Tidslinjen</span></button>
       </nav>
 
       <section class="panel entry-theme-text" id="create-panel" data-entry-type="text">
@@ -199,6 +200,18 @@
         <h2>Mina bidrag</h2>
         <p class="panel-intro">Här syns sådant som skapats från den här webbläsaren. Du kan ändra, kopiera, ta bort eller be admin om hjälp.</p>
         <div class="submission-list" id="my-submissions"></div>
+      </section>
+
+      <section class="panel friend-timeline-panel" id="friend-timeline-panel" hidden>
+        <div class="friend-timeline-heading">
+          <div>
+            <p class="eyebrow">EN ÖVERBLICK</p>
+            <h2>Tidslinjen</h2>
+          </div>
+          <span class="friend-timeline-private"><span data-icon="lock"></span> Bara datum och tider</span>
+        </div>
+        <p class="panel-intro">Här ser du hur tidslinjen växer. Innehåll, avsändare och vad som har öppnats förblir helt privat.</p>
+        <div class="friend-timeline" id="friend-timeline" aria-live="polite"></div>
       </section>
     </div>
   </main>

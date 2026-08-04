@@ -323,6 +323,17 @@
       if (!ok) throw new Error('Fel kod');
       return true;
     },
+    async getFriendTimeline(pin) {
+      if (config.mode==='local') {
+        checkLocalPin('friend',pin);
+        return loadStore().memories
+          .slice()
+          .sort((a,b) => new Date(a.unlock_at)-new Date(b.unlock_at))
+          .map((item) => ({unlock_at:item.unlock_at}));
+      }
+      const rows = await rpc('hd_friend_timeline',{p_friend_pin:pin});
+      return Array.isArray(rows) ? rows.map((row) => ({unlock_at:row.unlock_at})) : [];
+    },
     async verifyAdmin(pin) {
       if (config.mode==='local') { checkLocalPin('admin',pin); return true; }
       const ok = await rpc('hd_verify_admin',{p_admin_pin:pin});

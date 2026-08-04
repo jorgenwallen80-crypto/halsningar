@@ -216,6 +216,68 @@
   function formatUnlock(value) {
     return new Date(value).toLocaleString('sv-SE',{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
   }
+  function friendTimelineDay(value) {
+    return new Date(value).toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long'});
+  }
+  function friendTimelineTime(value) {
+    return new Date(value).toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'});
+  }
+  function friendTimelineKey(value) {
+    const date=new Date(value);
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+  async function renderFriendTimeline() {
+    const host=$('friend-timeline');
+    if(!host||!friendPin)return;
+    host.innerHTML='<div class="loading-state"><span class="soft-spinner" aria-hidden="true"></span><p>Hämtar tidslinjen...</p></div>';
+    try {
+      const rows=await dataApi.getFriendTimeline(friendPin);
+      host.innerHTML='';
+      if(!rows.length){
+        const empty=el('div','friend-timeline-empty');
+        const flower=document.createElement('img');flower.src=document.querySelector('.panel-floral-mark img')?.src || 'flower-mark.svg';flower.alt='';
+        empty.append(flower,el('h3','','Tidslinjen väntar på sin första händelse'),el('p','','När något läggs till syns datum och tid här.'));
+        host.appendChild(empty);
+        return;
+      }
+      const groups=new Map();
+      rows.forEach((row)=>{
+        const key=friendTimelineKey(row.unlock_at);
+        if(!groups.has(key))groups.set(key,[]);
+        groups.get(key).push(row);
+      });
+      let index=0;
+      groups.forEach((items)=>{
+        const section=el('section','friend-day-group');
+        const heading=el('div','friend-day-heading');
+        heading.append(el('h3','',friendTimelineDay(items[0].unlock_at)),el('span','',`${items.length} ${items.length===1?'händelse':'händelser'}`));
+        section.appendChild(heading);
+        items.forEach((item)=>{
+          const variant=(index%4)+1;
+          const article=el('article',`friend-timeline-item mystery-variant-${variant}`);
+          const node=el('span','friend-timeline-node');
+          const card=el('div','friend-overview-card');
+          const top=el('div','friend-overview-top');
+          const time=el('span','friend-overview-time');
+          time.append(icon('clock'),document.createTextNode(friendTimelineTime(item.unlock_at)));
+          top.appendChild(time);
+          const body=el('div','friend-overview-body');
+          const orb=el('span','friend-overview-orb');orb.appendChild(icon('lock'));
+          const copy=el('div','friend-overview-copy');copy.append(el('strong','','Något väntar på att öppnas'),el('p','','Innehållet är bara för mottagaren.'));
+          body.append(orb,copy);
+          const motif=el('span','friend-overview-motif');motif.setAttribute('aria-hidden','true');
+          card.append(top,body,motif);
+          article.append(node,card);
+          section.appendChild(article);
+          index+=1;
+        });
+        host.appendChild(section);
+      });
+    } catch(error) {
+      host.innerHTML='';
+      const state=el('div','error-state');state.append(el('p','',`Tidslinjen kunde inte hämtas: ${error.message}`));host.appendChild(state);
+    }
+  }
   function parseYouTubeId(value) {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -637,7 +699,12 @@
   }
   function switchTab(tab) {
     document.querySelectorAll('.tab-button').forEach((button)=>button.classList.toggle('active',button.dataset.tab===tab));
-    $('create-panel').hidden=tab!=='create'; $('mine-panel').hidden=tab!=='mine'; previewPanel.hidden=true; if(tab==='mine') renderMySubmissions();
+    $('create-panel').hidden=tab!=='create';
+    $('mine-panel').hidden=tab!=='mine';
+    $('friend-timeline-panel').hidden=tab!=='timeline';
+    previewPanel.hidden=true;
+    if(tab==='mine')renderMySubmissions();
+    if(tab==='timeline')renderFriendTimeline();
   }
 
   facts.categories.forEach((category)=>{ const option=document.createElement('option'); option.value=category; option.textContent=category; $('fact-category').appendChild(option); });
@@ -708,7 +775,11 @@
     finally { submitButton.disabled=false; }
   });
 
-  dataApi.subscribe(()=>{ if(!$('mine-panel').hidden&&friendPin)renderMySubmissions(); });
+  dataApi.subscribe(()=>{
+    if(!friendPin)return;
+    if(!$('mine-panel').hidden)renderMySubmissions();
+    if(!$('friend-timeline-panel').hidden)renderFriendTimeline();
+  });
   renderQuizEditor([],1); newSudoku(); $('unlock-date').value=defaultUnlockTime(); updateFactChoiceUI();
 
   const redirectedPin=sessionStorage.getItem(FRIEND_REDIRECT_KEY)||'';
