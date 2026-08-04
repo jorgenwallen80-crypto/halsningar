@@ -1,9 +1,0 @@
-set search_path=public,extensions;
-
-update public.hd_settings
-set
-  viewer_pin_hash = crypt('ERSATT_MED_MOTTAGARKOD', gen_salt('bf',10)),
-  friend_pin_hash = crypt('ERSATT_MED_VANKOD', gen_salt('bf',10)),
-  admin_pin_hash = crypt('ERSATT_MED_ADMINKOD', gen_salt('bf',10)),
-  updated_at = now()
-where id = 1;
