@@ -37,6 +37,7 @@
   const SESSION_KEY = 'handelser_viewer_pin_session';
   const KNOWN_IDS_KEY = 'handelser_viewer_known_ids';
   const OPENED_IDS_KEY = 'handelser_viewer_opened_ids';
+  const COLLAPSED_IDS_KEY = 'handelser_viewer_collapsed_ids';
   const FRIEND_REDIRECT_KEY = 'handelser_friend_redirect_pin';
   const ADMIN_REDIRECT_KEY = 'handelser_admin_redirect_pin';
   const mysteryIcons = ['gift','flower','leaf','heart','sun'];
@@ -63,6 +64,7 @@
   let lastTimelineSignature = '';
   let syncTimer = null;
   let openedIds = readOpenedIds();
+  let collapsedIds = readCollapsedIds();
   const imageUrlCache = new Map();
   let waitDialogTimer = null;
   const quizStates = new Map();
@@ -107,16 +109,31 @@
     try { const value=JSON.parse(localStorage.getItem(OPENED_IDS_KEY)||'[]'); return new Set(Array.isArray(value)?value:[]); } catch (_) { return new Set(); }
   }
   function saveOpenedIds() { try { localStorage.setItem(OPENED_IDS_KEY,JSON.stringify(Array.from(openedIds))); } catch (_) {} }
+  function readCollapsedIds() {
+    try { const value=JSON.parse(localStorage.getItem(COLLAPSED_IDS_KEY)||'[]'); return new Set(Array.isArray(value)?value:[]); } catch (_) { return new Set(); }
+  }
+  function saveCollapsedIds() { try { localStorage.setItem(COLLAPSED_IDS_KEY,JSON.stringify(Array.from(collapsedIds))); } catch (_) {} }
+  function setCardCollapsed(id,collapsed) {
+    if(collapsed) collapsedIds.add(id); else collapsedIds.delete(id);
+    saveCollapsedIds();
+    renderTimeline();
+  }
+  function stableVariant(memory,length) {
+    const source=String(memory?.id || memory?.unlock_at || memory?.friend_name || 'handelse');
+    let hash=0;
+    for(let index=0;index<source.length;index+=1) hash=(hash*31+source.charCodeAt(index))>>>0;
+    return length ? hash%length : 0;
+  }
   function markOpened(id,card) {
     if(openedIds.has(id))return;
     const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if(!card||reduced){openedIds.add(id);saveOpenedIds();renderTimeline();updateProgress();return;}
+    if(!card||reduced){openedIds.add(id);collapsedIds.delete(id);saveOpenedIds();saveCollapsedIds();renderTimeline();updateProgress();return;}
     if(card.classList.contains('is-opening'))return;
     card.classList.add('is-opening');
     const particles=el('div','open-particles');
     ['✦','❋','•','✧','✦','•'].forEach((value,index)=>{const bit=el('span','',value);bit.style.setProperty('--particle-index',String(index));bit.style.setProperty('--x',`${(index-2.5)*28}px`);particles.appendChild(bit);});
     card.appendChild(particles);
-    window.setTimeout(()=>{openedIds.add(id);saveOpenedIds();renderTimeline();updateProgress();},620);
+    window.setTimeout(()=>{openedIds.add(id);collapsedIds.delete(id);saveOpenedIds();saveCollapsedIds();renderTimeline();updateProgress();},620);
   }
   function waitParts(unlockAt) {
     const diff=Math.max(0,new Date(unlockAt).getTime()-nowMs());
@@ -209,12 +226,19 @@
     card.addEventListener('click',handler); card.addEventListener('keydown',(event)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();handler();}});
   }
   function createLockedCard(memory,index,isNext) {
-    const item=el('article',`timeline-item locked${isNext?' next-up':''}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
+    const variant=stableVariant(memory,4)+1;
+    const copyIndex=stableVariant(memory,mysteryTitles.length);
+    const iconIndex=stableVariant({id:`${memory.id || ''}-ikon`},mysteryIcons.length);
+    const item=el('article',`timeline-item locked mystery-variant-${variant}${isNext?' next-up':''}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
     const card=el('div','memory-card'); const inner=el('div','memory-card-inner'); const top=el('div','card-topline'); const time=el('span','card-time');
     time.append(icon('clock','time-icon'),document.createTextNode(formatTime(memory.unlock_at))); const badge=el('span','card-type'); badge.append(icon('lock','badge-icon'),document.createTextNode(isNext?'nästa':'väntar')); top.append(time,badge); inner.appendChild(top);
-    const stage=el('div','locked-stage'); const orb=el('div','mystery-orb'); orb.appendChild(icon(mysteryIcons[index%mysteryIcons.length],'mystery-icon')); stage.appendChild(orb);
-    const copy=el('div','locked-copy'); copy.append(el('strong','',isNext?'Nästa händelse':mysteryTitles[index%mysteryTitles.length]),el('p','',isNext?'Något väntar här. Tryck om du vill se hur länge det är kvar.':mysterySubtitles[index%mysterySubtitles.length])); stage.appendChild(copy); inner.appendChild(stage);
-    card.append(inner,el('span','locked-shimmer')); makeCardInteractive(card,()=>showWaitDialog(memory),`Låst händelse. Blir redo ${formatDay(memory.unlock_at)} klockan ${formatTime(memory.unlock_at)}`); item.appendChild(card); return item;
+    const stage=el('div','locked-stage'); const orb=el('div','mystery-orb'); orb.appendChild(icon(mysteryIcons[iconIndex],'mystery-icon')); stage.appendChild(orb);
+    const copy=el('div','locked-copy');
+    if(isNext) copy.appendChild(el('span','next-up-kicker','NÄRMAST PÅ TUR'));
+    copy.append(el('strong','',isNext?'Nästa lilla överraskning':mysteryTitles[copyIndex]),el('p','',isNext?'Något väntar här. Tryck om du vill se hur länge det är kvar.':mysterySubtitles[copyIndex]));
+    stage.appendChild(copy); inner.appendChild(stage);
+    const motif=el('span','locked-motif'); motif.setAttribute('aria-hidden','true');
+    card.append(inner,el('span','locked-shimmer'),motif); makeCardInteractive(card,()=>showWaitDialog(memory),`Låst händelse. Blir redo ${formatDay(memory.unlock_at)} klockan ${formatTime(memory.unlock_at)}`); item.appendChild(card); return item;
   }
   function createReadyCard(memory,index) {
     const item=el('article','timeline-item ready'); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
@@ -394,13 +418,39 @@
     return block;
   }
 
+  function openedCardSummary(memory) {
+    if(memory.title) return memory.title;
+    const defaults={text:'En hälsning att läsa igen',image:'En bild att titta på igen',quiz:'Ett litet quiz att göra igen',youtube:'Ett klipp att se igen',sudoku:'Ett sudoku att fortsätta med',fact:'En onödig fakta att minnas'};
+    return defaults[memory.content_type] || 'En öppnad ljuspunkt';
+  }
+
+  function createCollapsedOpenedCard(memory,index) {
+    const item=el('article',`timeline-item unlocked collapsed type-${memory.content_type}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
+    const card=el('button','memory-card collapsed-memory-card'); card.type='button'; card.setAttribute('aria-expanded','false'); card.setAttribute('aria-label',`Öppna ${typeLabel(memory.content_type).toLocaleLowerCase('sv-SE')} från ${memory.friend_name||'en vän'} igen`);
+    const inner=el('div','memory-card-inner collapsed-card-inner');
+    const top=createTopline(memory);
+    const reopen=el('span','collapsed-reopen'); reopen.append(icon('chevron-down'),document.createTextNode('Öppna igen'));
+    top.appendChild(reopen);
+    const summary=el('div','collapsed-card-summary');
+    const mark=el('div','collapsed-type-mark'); mark.appendChild(icon(typeIcon(memory.content_type)));
+    const copy=el('div','collapsed-card-copy'); copy.append(el('strong','',openedCardSummary(memory)),el('span','',`Från ${memory.friend_name||'någon som tänker på dig'}`));
+    summary.append(mark,copy); inner.append(top,summary); card.appendChild(inner);
+    card.addEventListener('click',()=>setCardCollapsed(memory.id,false));
+    item.appendChild(card); return item;
+  }
+
   function createUnlockedCard(memory,index) {
-    const item=el('article',`timeline-item unlocked type-${memory.content_type}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
+    if(collapsedIds.has(memory.id)) return createCollapsedOpenedCard(memory,index);
+    const item=el('article',`timeline-item unlocked expanded type-${memory.content_type}`); item.dataset.memoryId=memory.id; item.style.animationDelay=`${Math.min(index*.055,.4)}s`; item.appendChild(el('span','timeline-node'));
     const card=el('div','memory-card');
     if(memory.content_type==='youtube'&&(memory.youtube_id||memory.extra_data?.link_url||memory.extra_data?.media_url)) card.appendChild(createVideo(memory));
     const inner=el('div','memory-card-inner');
+    const topline=createTopline(memory);
+    const collapse=el('button','collapse-card-button'); collapse.type='button'; collapse.setAttribute('aria-label','Stäng kortet'); collapse.append(icon('chevron-down'),document.createTextNode('Stäng'));
+    collapse.addEventListener('click',()=>setCardCollapsed(memory.id,true));
+    topline.appendChild(collapse);
     const joyMark=el('div','type-joy-mark'); joyMark.setAttribute('aria-hidden','true'); joyMark.appendChild(icon(typeIcon(memory.content_type)));
-    inner.append(createTopline(memory),createSender(memory)); appendMessage(memory,inner); inner.appendChild(joyMark); card.appendChild(inner);
+    inner.append(topline,createSender(memory)); appendMessage(memory,inner); inner.appendChild(joyMark); card.appendChild(inner);
     if(memory.content_type==='image'&&(memory.image_data||memory.image_path))card.appendChild(createImage(memory));
     if(memory.content_type==='quiz'){const wrap=el('div','card-content-block');wrap.appendChild(createQuiz(memory));card.appendChild(wrap);}
     if(memory.content_type==='sudoku'){const wrap=el('div','card-content-block activity-content-block');wrap.appendChild(createSudoku(memory));card.appendChild(wrap);}
@@ -438,8 +488,16 @@
       const addedIds=Array.from(freshIds).filter((id)=>!knownIds.has(id));
       const freshUnlocked=new Set(fresh.filter((item)=>item.is_unlocked).map((item)=>item.id));
       const newlyUnlocked=didInitialLoad?Array.from(freshUnlocked).filter((id)=>!previousUnlockedIds.has(id)):[];
-      const signature=JSON.stringify(fresh); memories=fresh; openedIds=new Set(Array.from(openedIds).filter((id)=>freshIds.has(id))); saveOpenedIds(); previousUnlockedIds=freshUnlocked;
-      if(signature!==lastTimelineSignature){renderTimeline();lastTimelineSignature=signature;}
+      const signature=JSON.stringify(fresh);
+      const previousOpenedSignature=JSON.stringify(Array.from(openedIds).sort());
+      const previousCollapsedSignature=JSON.stringify(Array.from(collapsedIds).sort());
+      memories=fresh;
+      openedIds=new Set(Array.from(openedIds).filter((id)=>freshIds.has(id)&&freshUnlocked.has(id)));
+      collapsedIds=new Set(Array.from(collapsedIds).filter((id)=>openedIds.has(id)));
+      const openedSignature=JSON.stringify(Array.from(openedIds).sort());
+      const collapsedSignature=JSON.stringify(Array.from(collapsedIds).sort());
+      saveOpenedIds(); saveCollapsedIds(); previousUnlockedIds=freshUnlocked;
+      if(signature!==lastTimelineSignature||openedSignature!==previousOpenedSignature||collapsedSignature!==previousCollapsedSignature){renderTimeline();lastTimelineSignature=signature;}
       updateProgress(); scheduleNextUnlock(); saveKnownIds(freshIds);
       if(addedIds.length && (didInitialLoad || knownIds.size)) {
         if(didInitialLoad) showToast(addedIds.length>1?`${addedIds.length} nya händelser har lagts till`:'Någon har lagt till en ny händelse');
