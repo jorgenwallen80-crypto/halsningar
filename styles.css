@@ -627,8 +627,8 @@ body.dialog-open { overflow:hidden; }
 .recipient-welcome-copy { position: relative; z-index: 1; min-width: 0; text-align:center; }
 .recipient-welcome h1 {
   margin: 0;
-  font-family: "Yellowtail", "Segoe Script", "Bradley Hand", cursive;
-  font-size: clamp(39px,10.8vw,55px);
+  font-family: "Nothing You Could Do", "Segoe Print", "Bradley Hand", cursive;
+  font-size: clamp(42px,11.5vw,58px);
   line-height: 1.05;
   font-weight: normal !important;
   font-synthesis: none;
@@ -652,8 +652,8 @@ body.dialog-open { overflow:hidden; }
 .admin-preview-kicker { display:block; margin-bottom:8px; color:var(--accent-dark); font-size:9px; font-weight:800; letter-spacing:.16em; }
 .admin-welcome-preview strong {
   display:block;
-  font-family: "Yellowtail", "Segoe Script", "Bradley Hand", cursive;
-  font-size:36px;
+  font-family: "Nothing You Could Do", "Segoe Print", "Bradley Hand", cursive;
+  font-size:39px;
   line-height:1.08;
   font-weight:normal !important;
   font-synthesis:none;
