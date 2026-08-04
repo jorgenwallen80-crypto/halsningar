@@ -870,7 +870,7 @@ emoji-picker.emoji-picker {
 .timeline-item.locked.mystery-variant-2 .locked-motif::after { right:58px; bottom:48px; font-size:11px; }
 .timeline-item.locked.mystery-variant-3 { --mystery-accent:#d5aeb1; --mystery-soft:#fff0f1; --mystery-ink:#936b70; }
 .timeline-item.locked.mystery-variant-3 .memory-card { background:radial-gradient(circle at 83% 12%,rgba(255,255,255,.92),transparent 36%),linear-gradient(145deg,#fceff0,#fbf8f5); }
-.timeline-item.locked.mystery-variant-3 .locked-motif { opacity:.18; filter:hue-rotate(292deg) saturate(.7); transform:scaleX(-1) rotate(-5deg); }
+.timeline-item.locked.mystery-variant-3 .locked-motif { opacity:.18; filter:hue-rotate(292deg) saturate(.7); transform:rotate(-2deg); }
 .timeline-item.locked.mystery-variant-4 { --mystery-accent:#91bcca; --mystery-soft:#eaf6f8; --mystery-ink:#5b818b; }
 .timeline-item.locked.mystery-variant-4 .memory-card { background:radial-gradient(circle at 83% 14%,rgba(255,255,255,.93),transparent 35%),linear-gradient(145deg,#eaf5f7,#f6fbfa); }
 .timeline-item.locked.mystery-variant-4 .locked-motif { opacity:.2; filter:hue-rotate(35deg) saturate(.65); }
@@ -1059,7 +1059,7 @@ emoji-picker.emoji-picker {
 .friend-overview-copy p { margin:0; color:var(--text-faint); font-size:12px; line-height:1.42; }
 .friend-overview-motif { position:absolute; right:-5px; bottom:-4px; width:92px; height:76px; background:url('floral-corner.svg') right bottom / contain no-repeat; opacity:.18; filter:saturate(.72); }
 .friend-timeline-item.mystery-variant-2 .friend-overview-motif { filter:sepia(.16) saturate(.82) hue-rotate(-8deg); }
-.friend-timeline-item.mystery-variant-3 .friend-overview-motif { filter:hue-rotate(292deg) saturate(.7); transform:scaleX(-1) rotate(-5deg); }
+.friend-timeline-item.mystery-variant-3 .friend-overview-motif { filter:hue-rotate(292deg) saturate(.7); transform:rotate(-2deg); }
 .friend-timeline-item.mystery-variant-4 .friend-overview-motif { filter:hue-rotate(35deg) saturate(.65); }
 .friend-timeline-empty { padding:30px 20px; border:1px dashed var(--line-strong); border-radius:var(--radius-lg); background:rgba(255,255,255,.56); text-align:center; }
 .friend-timeline-empty img { width:58px; height:58px; opacity:.72; }

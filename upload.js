@@ -57,6 +57,8 @@
   let quizCount = 1;
   let toastTimer = null;
   let dailyTimer = null;
+  let friendTimelineLoading = false;
+  let friendTimelineSignature = '';
 
   $('mode-badge').textContent = config.mode==='local' ? 'Lokalt testläge' : 'Säker livekoppling';
 
@@ -228,54 +230,77 @@
   }
   async function renderFriendTimeline() {
     const host=$('friend-timeline');
-    if(!host||!friendPin)return;
-    host.innerHTML='<div class="loading-state"><span class="soft-spinner" aria-hidden="true"></span><p>Hämtar tidslinjen...</p></div>';
+    if(!host||!friendPin||friendTimelineLoading)return;
+    const hasRenderedContent=Boolean(host.dataset.rendered==='true');
+    friendTimelineLoading=true;
+    if(!hasRenderedContent){
+      host.innerHTML='<div class="loading-state"><span class="soft-spinner" aria-hidden="true"></span><p>Hämtar tidslinjen...</p></div>';
+    }
     try {
       const rows=await dataApi.getFriendTimeline(friendPin);
-      host.innerHTML='';
+      const signature=JSON.stringify(rows.map((row)=>String(row.unlock_at||'')));
+      if(hasRenderedContent&&signature===friendTimelineSignature)return;
+
+      const fragment=document.createDocumentFragment();
       if(!rows.length){
         const empty=el('div','friend-timeline-empty');
-        const flower=document.createElement('img');flower.src=document.querySelector('.panel-floral-mark img')?.src || 'flower-mark.svg';flower.alt='';
+        const flower=document.createElement('img');
+        flower.src=document.querySelector('.panel-floral-mark img')?.src || 'flower-mark.svg';
+        flower.alt='';
         empty.append(flower,el('h3','','Tidslinjen väntar på sin första händelse'),el('p','','När något läggs till syns datum och tid här.'));
-        host.appendChild(empty);
-        return;
-      }
-      const groups=new Map();
-      rows.forEach((row)=>{
-        const key=friendTimelineKey(row.unlock_at);
-        if(!groups.has(key))groups.set(key,[]);
-        groups.get(key).push(row);
-      });
-      let index=0;
-      groups.forEach((items)=>{
-        const section=el('section','friend-day-group');
-        const heading=el('div','friend-day-heading');
-        heading.append(el('h3','',friendTimelineDay(items[0].unlock_at)),el('span','',`${items.length} ${items.length===1?'händelse':'händelser'}`));
-        section.appendChild(heading);
-        items.forEach((item)=>{
-          const variant=(index%4)+1;
-          const article=el('article',`friend-timeline-item mystery-variant-${variant}`);
-          const node=el('span','friend-timeline-node');
-          const card=el('div','friend-overview-card');
-          const top=el('div','friend-overview-top');
-          const time=el('span','friend-overview-time');
-          time.append(icon('clock'),document.createTextNode(friendTimelineTime(item.unlock_at)));
-          top.appendChild(time);
-          const body=el('div','friend-overview-body');
-          const orb=el('span','friend-overview-orb');orb.appendChild(icon('lock'));
-          const copy=el('div','friend-overview-copy');copy.append(el('strong','','Något väntar på att öppnas'),el('p','','Innehållet är bara för mottagaren.'));
-          body.append(orb,copy);
-          const motif=el('span','friend-overview-motif');motif.setAttribute('aria-hidden','true');
-          card.append(top,body,motif);
-          article.append(node,card);
-          section.appendChild(article);
-          index+=1;
+        fragment.appendChild(empty);
+      } else {
+        const groups=new Map();
+        rows.forEach((row)=>{
+          const key=friendTimelineKey(row.unlock_at);
+          if(!groups.has(key))groups.set(key,[]);
+          groups.get(key).push(row);
         });
-        host.appendChild(section);
-      });
+        let index=0;
+        groups.forEach((items)=>{
+          const section=el('section','friend-day-group');
+          const heading=el('div','friend-day-heading');
+          heading.append(el('h3','',friendTimelineDay(items[0].unlock_at)),el('span','',`${items.length} ${items.length===1?'händelse':'händelser'}`));
+          section.appendChild(heading);
+          items.forEach((item)=>{
+            const variant=(index%4)+1;
+            const article=el('article',`friend-timeline-item mystery-variant-${variant}`);
+            const node=el('span','friend-timeline-node');
+            const card=el('div','friend-overview-card');
+            const top=el('div','friend-overview-top');
+            const time=el('span','friend-overview-time');
+            time.append(icon('clock'),document.createTextNode(friendTimelineTime(item.unlock_at)));
+            top.appendChild(time);
+            const body=el('div','friend-overview-body');
+            const orb=el('span','friend-overview-orb');
+            orb.appendChild(icon('lock'));
+            const copy=el('div','friend-overview-copy');
+            copy.append(el('strong','','Något väntar på att öppnas'),el('p','','Innehållet är bara för mottagaren.'));
+            body.append(orb,copy);
+            const motif=el('span','friend-overview-motif');
+            motif.setAttribute('aria-hidden','true');
+            card.append(top,body,motif);
+            article.append(node,card);
+            section.appendChild(article);
+            index+=1;
+          });
+          fragment.appendChild(section);
+        });
+      }
+      host.replaceChildren(fragment);
+      host.dataset.rendered='true';
+      friendTimelineSignature=signature;
     } catch(error) {
-      host.innerHTML='';
-      const state=el('div','error-state');state.append(el('p','',`Tidslinjen kunde inte hämtas: ${error.message}`));host.appendChild(state);
+      if(hasRenderedContent){
+        showToast('Tidslinjen kunde inte uppdateras just nu');
+      } else {
+        host.innerHTML='';
+        const state=el('div','error-state');
+        state.append(el('p','',`Tidslinjen kunde inte hämtas: ${error.message}`));
+        host.appendChild(state);
+      }
+    } finally {
+      friendTimelineLoading=false;
     }
   }
   function parseYouTubeId(value) {
