@@ -11,17 +11,96 @@ const RPC_ALLOWLIST = new Set([
   'hd_server_clock','hd_sudoku_hint','hd_timeline','hd_update_memory','hd_verify_admin','hd_verify_friend','hd_viewer_presentation'
 ]);
 const requestWindows = new Map();
+const failedPinWindows = new Map();
+
 function clientIp(event) {
   return String(event.headers?.['x-nf-client-connection-ip'] || event.headers?.['x-forwarded-for'] || 'unknown').split(',')[0].trim();
 }
-function enforceRateLimit(event, action) {
-  const ip=clientIp(event); const now=Date.now();
-  const authAction=action==='rpc' && /^hd_(verify_|timeline$|server_clock$)/.test(String(JSON.parse(event.body||'{}').name||''));
-  const windowMs=authAction?15*60*1000:60*1000; const max=authAction?12:180; const key=`${ip}:${authAction?'auth':'general'}`;
-  const current=requestWindows.get(key);
-  if(!current || current.resetAt<=now){requestWindows.set(key,{count:1,resetAt:now+windowMs});return;}
-  current.count+=1;
-  if(current.count>max){const seconds=Math.max(1,Math.ceil((current.resetAt-now)/1000));const error=new Error(`För många försök. Vänta ${seconds} sekunder.`);error.statusCode=429;throw error;}
+
+function enforceGeneralRateLimit(event) {
+  const ip = clientIp(event);
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const max = 600;
+  const key = `${ip}:general`;
+  const current = requestWindows.get(key);
+  if (!current || current.resetAt <= now) {
+    requestWindows.set(key, { count: 1, resetAt: now + windowMs });
+    return;
+  }
+  current.count += 1;
+  if (current.count > max) {
+    const seconds = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
+    const error = new Error(`För många anrop. Vänta ${seconds} sekunder.`);
+    error.statusCode = 429;
+    throw error;
+  }
+}
+
+function pinPolicy(scope) {
+  if (scope === 'admin') return { maxFailures: 6, windowMs: 15 * 60 * 1000 };
+  return { maxFailures: 12, windowMs: 15 * 60 * 1000 };
+}
+
+function pinAttemptKey(event, scope) {
+  return `${clientIp(event)}:${scope}:pin`;
+}
+
+function assertPinNotLocked(event, scope) {
+  if (!scope) return;
+  const key = pinAttemptKey(event, scope);
+  const current = failedPinWindows.get(key);
+  const now = Date.now();
+  if (!current) return;
+  if (current.lockedUntil > now) {
+    const seconds = Math.max(1, Math.ceil((current.lockedUntil - now) / 1000));
+    const error = new Error(`För många felaktiga kodförsök. Vänta ${seconds} sekunder.`);
+    error.statusCode = 429;
+    throw error;
+  }
+  if (current.resetAt <= now) failedPinWindows.delete(key);
+}
+
+function registerPinFailure(event, scope) {
+  if (!scope) return;
+  const key = pinAttemptKey(event, scope);
+  const now = Date.now();
+  const policy = pinPolicy(scope);
+  let current = failedPinWindows.get(key);
+  if (!current || current.resetAt <= now) {
+    current = { failures: 0, resetAt: now + policy.windowMs, lockedUntil: 0 };
+  }
+  current.failures += 1;
+  if (current.failures >= policy.maxFailures) current.lockedUntil = current.resetAt;
+  failedPinWindows.set(key, current);
+}
+
+function clearPinFailures(event, scope) {
+  if (!scope) return;
+  failedPinWindows.delete(pinAttemptKey(event, scope));
+}
+
+function isPinFailure(error) {
+  return /fel kod|felaktig kod|ogiltig kod|invalid pin|wrong pin/i.test(String(error?.message || error || ''));
+}
+
+function rpcPinScope(name) {
+  if (/^hd_admin_/.test(name) || name === 'hd_verify_admin') return 'admin';
+  if (name === 'hd_verify_friend' || /^hd_(add_memory|update_memory|my_memories|day_available|day_capacity|random_fact|request_admin_help)$/.test(name)) return 'friend';
+  if (/^hd_(timeline|server_clock|viewer_presentation|check_quiz|check_sudoku|sudoku_hint)$/.test(name)) return 'viewer';
+  return '';
+}
+
+async function withPinGuard(event, scope, operation) {
+  assertPinNotLocked(event, scope);
+  try {
+    const result = await operation();
+    clearPinFailures(event, scope);
+    return result;
+  } catch (error) {
+    if (isPinFailure(error)) registerPinFailure(event, scope);
+    throw error;
+  }
 }
 
 function response(statusCode, body) {
@@ -139,13 +218,25 @@ export async function handler(event) {
     const client = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const body = JSON.parse(event.body || '{}');
     const action = String(body.action || '');
-    enforceRateLimit(event,action);
+    enforceGeneralRateLimit(event);
 
     if (action === 'rpc') {
-      const name=String(body.name || '');
-      if(!RPC_ALLOWLIST.has(name)) throw new Error('RPC-anropet är inte tillåtet');
-      const data=await rpc(client,name,body.args && typeof body.args==='object'?body.args:{});
-      return response(200,{data});
+      const name = String(body.name || '');
+      if (!RPC_ALLOWLIST.has(name)) throw new Error('RPC-anropet är inte tillåtet');
+      const scope = rpcPinScope(name);
+      assertPinNotLocked(event, scope);
+      try {
+        const data = await rpc(client, name, body.args && typeof body.args === 'object' ? body.args : {});
+        if ((name === 'hd_verify_friend' || name === 'hd_verify_admin') && data !== true) {
+          registerPinFailure(event, scope);
+        } else {
+          clearPinFailures(event, scope);
+        }
+        return response(200, { data });
+      } catch (error) {
+        if (isPinFailure(error)) registerPinFailure(event, scope);
+        throw error;
+      }
     }
 
     if (action === 'create-upload') {
@@ -154,7 +245,7 @@ export async function handler(event) {
       const size = Number(body.size || 0);
       if (!ALLOWED_TYPES.has(contentType)) throw new Error('Bildformatet stöds inte');
       if (!Number.isFinite(size) || size < 1 || size > MAX_BYTES) throw new Error('Bilden är för stor');
-      await verifyFriend(client, body.pin);
+      await withPinGuard(event, 'friend', () => verifyFriend(client, body.pin));
       await ensureBucket(client);
       const path = `${body.contributorToken}-${randomUUID()}.${extensionFor(contentType)}`;
       const { data, error } = await client.storage.from(BUCKET).createSignedUploadUrl(path, { upsert: false });
@@ -167,7 +258,7 @@ export async function handler(event) {
       const size = Number(body.size || 0);
       if (!ALLOWED_TYPES.has(contentType)) throw new Error('Bildformatet stöds inte');
       if (!Number.isFinite(size) || size < 1 || size > MAX_BYTES) throw new Error('Bilden är för stor');
-      await verifyAdmin(client, body.pin);
+      await withPinGuard(event, 'admin', () => verifyAdmin(client, body.pin));
       await ensureBucket(client);
       const path = `admin-${randomUUID()}.${extensionFor(contentType)}`;
       const { data, error } = await client.storage.from(BUCKET).createSignedUploadUrl(path, { upsert: false });
@@ -176,7 +267,7 @@ export async function handler(event) {
     }
 
     if (action === 'cleanup-admin-upload') {
-      await verifyAdmin(client, body.pin);
+      await withPinGuard(event, 'admin', () => verifyAdmin(client, body.pin));
       const path = String(body.path || '');
       if (!path || path.includes('/') || !/\.(jpg|png|webp)$/i.test(path)) throw new Error('Ogiltig bildsökväg');
       await removePath(client, path);
@@ -186,12 +277,13 @@ export async function handler(event) {
     if (action === 'signed-image') {
       if (!validUuid(body.memoryId)) throw new Error('Bilden kunde inte hittas');
       await ensureBucket(client);
-      return response(200, await signedImage(client, body));
+      const scope = ['viewer','friend','admin'].includes(body.role) ? body.role : '';
+      return response(200, await withPinGuard(event, scope, () => signedImage(client, body)));
     }
 
     if (action === 'cleanup-upload') {
       if (!validUuid(body.contributorToken)) throw new Error('Enhetens bidragsnyckel är ogiltig');
-      await verifyFriend(client, body.pin);
+      await withPinGuard(event, 'friend', () => verifyFriend(client, body.pin));
       const path = String(body.path || '');
       if (!path.startsWith(`${body.contributorToken}-`)) throw new Error('Filen tillhör inte den här enheten');
       await removePath(client, path);
@@ -202,6 +294,7 @@ export async function handler(event) {
       if (!validUuid(body.memoryId)) throw new Error('Händelsen kunde inte hittas');
       let path = '';
       if (body.role === 'friend') {
+        await withPinGuard(event, 'friend', () => verifyFriend(client, body.pin));
         path = await rpc(client, 'hd_friend_image_path', {
           p_friend_pin: body.pin,
           p_contributor_token: body.contributorToken,
@@ -214,7 +307,7 @@ export async function handler(event) {
           p_id: body.memoryId
         });
       } else if (body.role === 'admin') {
-        await verifyAdmin(client, body.pin);
+        await withPinGuard(event, 'admin', () => verifyAdmin(client, body.pin));
         path = await rpc(client, 'hd_admin_image_path', { p_admin_pin: body.pin, p_id: body.memoryId }).catch(() => '');
         await removePath(client, path);
         await rpc(client, 'hd_admin_delete_memory', { p_admin_pin: body.pin, p_id: body.memoryId });
@@ -225,7 +318,7 @@ export async function handler(event) {
     }
 
     if (action === 'purge-all') {
-      await verifyAdmin(client, body.pin);
+      await withPinGuard(event, 'admin', () => verifyAdmin(client, body.pin));
       if (String(body.confirmation || '').trim().toLocaleUpperCase('sv-SE') !== 'AVSLUTA HÄNDELSER') {
         throw new Error('Skriv AVSLUTA HÄNDELSER för att bekräfta');
       }
