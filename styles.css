@@ -981,20 +981,46 @@ emoji-picker.emoji-picker {
 }
 @media (prefers-reduced-motion:reduce) { .collapsed-memory-card { transition:none; } }
 
-/* v7.3 tydligare inläggstyper */
-#create-panel{--entry-accent:#8cc4a6;--entry-soft:rgba(140,196,166,.12);--entry-line:rgba(140,196,166,.42);border-color:var(--entry-line);background:linear-gradient(180deg,var(--entry-soft),rgba(255,255,255,.96) 210px);transition:.2s ease}
-#create-panel.entry-theme-text{--entry-accent:#8cc4a6;--entry-soft:rgba(140,196,166,.13);--entry-line:rgba(140,196,166,.46)}
-#create-panel.entry-theme-image{--entry-accent:#7fb5cf;--entry-soft:rgba(127,181,207,.13);--entry-line:rgba(127,181,207,.46)}
-#create-panel.entry-theme-quiz{--entry-accent:#b39acb;--entry-soft:rgba(179,154,203,.13);--entry-line:rgba(179,154,203,.46)}
-#create-panel.entry-theme-youtube{--entry-accent:#d79a91;--entry-soft:rgba(215,154,145,.13);--entry-line:rgba(215,154,145,.46)}
-#create-panel.entry-theme-sudoku{--entry-accent:#d0ae67;--entry-soft:rgba(208,174,103,.13);--entry-line:rgba(208,174,103,.46)}
-#create-panel.entry-theme-fact{--entry-accent:#9caf78;--entry-soft:rgba(156,175,120,.14);--entry-line:rgba(156,175,120,.48)}
-#create-panel .field>label{color:var(--entry-accent)}
-#create-panel .text-input:focus,#create-panel .textarea:focus,#create-panel select:focus{border-color:var(--entry-accent);box-shadow:0 0 0 3px var(--entry-soft)}
-#create-panel .type-fields:not([hidden]),#create-panel .type-note:not([hidden]){border-color:var(--entry-line);background:linear-gradient(145deg,var(--entry-soft),rgba(255,255,255,.82))}
-.friend-page .type-button[data-type=text].active{border-color:#8cc4a6;background:rgba(140,196,166,.16)}
-.friend-page .type-button[data-type=image].active{border-color:#7fb5cf;background:rgba(127,181,207,.16)}
-.friend-page .type-button[data-type=quiz].active{border-color:#b39acb;background:rgba(179,154,203,.16)}
-.friend-page .type-button[data-type=youtube].active{border-color:#d79a91;background:rgba(215,154,145,.16)}
-.friend-page .type-button[data-type=sudoku].active{border-color:#d0ae67;background:rgba(208,174,103,.16)}
-.friend-page .type-button[data-type=fact].active{border-color:#9caf78;background:rgba(156,175,120,.17)}
+/* v7.3.2 subtila färgspår endast i skaparvyn */
+.friend-page #create-panel{
+  --entry-accent:#7fae8f;
+  --entry-soft:rgba(127,174,143,.11);
+  --entry-line:rgba(127,174,143,.38);
+  border-color:var(--entry-line);
+  background:linear-gradient(180deg,var(--entry-soft),rgba(255,255,255,.96) 220px);
+  transition:border-color .2s ease,background .2s ease;
+}
+.friend-page #create-panel.entry-theme-text{--entry-accent:#7fae8f;--entry-soft:rgba(127,174,143,.12);--entry-line:rgba(127,174,143,.42)}
+.friend-page #create-panel.entry-theme-image{--entry-accent:#7fa8b2;--entry-soft:rgba(127,168,178,.12);--entry-line:rgba(127,168,178,.42)}
+.friend-page #create-panel.entry-theme-quiz{--entry-accent:#c3a052;--entry-soft:rgba(195,160,82,.13);--entry-line:rgba(195,160,82,.44)}
+.friend-page #create-panel.entry-theme-youtube{--entry-accent:#c97f73;--entry-soft:rgba(201,127,115,.12);--entry-line:rgba(201,127,115,.43)}
+.friend-page #create-panel.entry-theme-sudoku{--entry-accent:#9d91ad;--entry-soft:rgba(157,145,173,.12);--entry-line:rgba(157,145,173,.42)}
+.friend-page #create-panel.entry-theme-fact{--entry-accent:#929f6d;--entry-soft:rgba(146,159,109,.13);--entry-line:rgba(146,159,109,.44)}
+.friend-page #create-panel #form-title{display:flex;align-items:center;gap:9px;color:var(--text)}
+.friend-page #create-panel #form-title::before{content:"";width:10px;height:10px;flex:0 0 10px;border-radius:50%;background:var(--entry-accent);box-shadow:0 0 0 5px var(--entry-soft)}
+.friend-page #create-panel .field>label{color:color-mix(in srgb,var(--entry-accent) 78%,var(--text))}
+.friend-page #create-panel .text-input,
+.friend-page #create-panel .textarea,
+.friend-page #create-panel .select-input,
+.friend-page #create-panel select{background:color-mix(in srgb,var(--entry-soft) 32%,#fff)}
+.friend-page #create-panel .text-input:focus,
+.friend-page #create-panel .textarea:focus,
+.friend-page #create-panel select:focus{border-color:var(--entry-accent);box-shadow:0 0 0 3px var(--entry-soft)}
+.friend-page #create-panel .type-fields:not([hidden]),
+.friend-page #create-panel .type-note:not([hidden]){border-color:var(--entry-line);background:linear-gradient(145deg,var(--entry-soft),rgba(255,255,255,.86))}
+.friend-page .type-button[data-type=text].active{border-color:#7fae8f;background:rgba(127,174,143,.15);color:#557b62}
+.friend-page .type-button[data-type=image].active{border-color:#7fa8b2;background:rgba(127,168,178,.15);color:#526f77}
+.friend-page .type-button[data-type=quiz].active{border-color:#c3a052;background:rgba(195,160,82,.16);color:#806723}
+.friend-page .type-button[data-type=youtube].active{border-color:#c97f73;background:rgba(201,127,115,.15);color:#8a534b}
+.friend-page .type-button[data-type=sudoku].active{border-color:#9d91ad;background:rgba(157,145,173,.15);color:#685d78}
+.friend-page .type-button[data-type=fact].active{border-color:#929f6d;background:rgba(146,159,109,.16);color:#5f6a42}
+
+/* Liten sparbekräftelse längst ner */
+.friend-page .toast{display:flex;align-items:center;justify-content:flex-start;gap:11px;text-align:left;padding:11px 14px}
+.friend-page .toast-with-flower{border-color:rgba(127,174,143,.38);background:rgba(252,255,253,.97)}
+.toast-flower{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:13px;background:rgba(127,174,143,.11)}
+.toast-flower img{width:32px;height:32px;display:block;object-fit:contain}
+.toast-copy{min-width:0;display:grid;gap:2px}
+.toast-title{font-size:13px;line-height:1.25;color:var(--text)}
+.toast-detail{font-size:11px;line-height:1.35;color:var(--text-soft)}
+

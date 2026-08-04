@@ -83,6 +83,17 @@
     const copy=formCopy(type);
     $('form-title').textContent=copy.title;
     $('form-intro').textContent=copy.intro;
+    const titleInput=$('memory-title');
+    if(titleInput){
+      titleInput.placeholder=({
+        text:'Skriv en rubrik om du vill',
+        image:'Ge bilden en rubrik om du vill',
+        quiz:'Namnge quizet om du vill',
+        youtube:'Skriv vad klippet handlar om, om du vill',
+        sudoku:'Lägg till en rubrik om du vill',
+        fact:'Ge faktan en rubrik om du vill'
+      })[type] || 'Skriv en rubrik om du vill';
+    }
     const panel=$('create-panel');
     if(panel){panel.className=`panel entry-theme-${type}`;panel.dataset.entryType=type;}
   }
@@ -112,36 +123,36 @@
     element.textContent = message || '';
     element.className = `form-status${kind?` ${kind}`:''}`;
   }
-  function showToast(message) {
-    toast.textContent = message;
+  function showToast(message,options={}) {
+    toast.replaceChildren();
+    toast.classList.toggle('toast-with-flower',Boolean(options.flower));
+    if(options.flower){
+      const mark=el('span','toast-flower');
+      const source=document.querySelector('.panel-floral-mark img')?.src || 'flower-mark.svg';
+      const image=document.createElement('img');
+      image.src=source;
+      image.alt='';
+      mark.appendChild(image);
+      toast.appendChild(mark);
+    }
+    const copy=el('span','toast-copy');
+    copy.appendChild(el('strong','toast-title',message));
+    if(options.detail)copy.appendChild(el('small','toast-detail',options.detail));
+    toast.appendChild(copy);
     toast.hidden = false;
     requestAnimationFrame(() => toast.classList.add('show'));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => { toast.hidden = true; },250);
-    },3000);
+    },Number(options.duration || 3000));
   }
   function showSaveCelebration(payload) {
-    let overlay=$('save-celebration-overlay');
-    if(!overlay){
-      overlay=el('div','save-celebration-overlay'); overlay.id='save-celebration-overlay'; overlay.hidden=true;
-      const card=el('section','save-celebration-card'); card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','save-celebration-title');
-      const bloom=el('div','save-celebration-bloom'); bloom.appendChild(icon('flower'));
-      const sparkles=el('div','save-celebration-sparkles'); ['✦','•','✧','•','✦'].forEach((value,index)=>{const bit=el('span','',value);bit.style.setProperty('--spark-index',String(index));bit.style.setProperty('--angle',`${index*72}deg`);sparkles.appendChild(bit);});
-      const title=el('h2','', 'Fint, den är sparad'); title.id='save-celebration-title';
-      const copy=el('p','save-celebration-copy','Din händelse är sparad och väntar på rätt ögonblick 💚');
-      const when=el('p','save-celebration-time'); when.id='save-celebration-time';
-      const close=el('button','primary-button button-with-icon'); close.type='button'; close.id='close-save-celebration'; close.append(icon('check'),document.createTextNode('Klart'));
-      card.append(sparkles,bloom,title,copy,when,close); overlay.appendChild(card); document.body.appendChild(overlay);
-      const closeOverlay=()=>{overlay.hidden=true;document.body.classList.remove('dialog-open');};
-      close.addEventListener('click',closeOverlay); overlay.addEventListener('click',(event)=>{if(event.target===overlay)closeOverlay();});
-      document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!overlay.hidden)closeOverlay();});
-    }
-    const when=overlay.querySelector('#save-celebration-time');
-    if(when)when.textContent=`Den öppnas ${formatUnlock(payload.unlock_at)}.`;
-    overlay.hidden=false; document.body.classList.add('dialog-open');
-    window.setTimeout(()=>overlay.querySelector('#close-save-celebration')?.focus(),0);
+    showToast('Händelsen är sparad',{
+      flower:true,
+      detail:`Den öppnas ${formatUnlock(payload.unlock_at)}.`,
+      duration:4200
+    });
   }
   const fallbackEmojis = ['💚','❤️','🫶','🥰','😊','🤗','✨','🌸','🌿','☀️','🌈','💪','😂','🎵','☕','🙏','🎉','💐','🌻','🍀','⭐️','🩷','🤍','🤎','💙','😄','😌','😘','🙌','👍'];
   function insertEmoji(value) {
