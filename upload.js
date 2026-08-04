@@ -83,6 +83,8 @@
     const copy=formCopy(type);
     $('form-title').textContent=copy.title;
     $('form-intro').textContent=copy.intro;
+    const panel=$('create-panel');
+    if(panel){panel.className=`panel entry-theme-${type}`;panel.dataset.entryType=type;}
   }
   function defaultMessageForType(type) {
     return ({

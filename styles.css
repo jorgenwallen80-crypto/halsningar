@@ -683,7 +683,7 @@ body.dialog-open { overflow:hidden; }
   position:absolute;
   z-index:12;
   left:0;
-  top:42px;
+  bottom:42px;
   width:min(360px,calc(100vw - 48px));
   min-height:320px;
   display:block;
@@ -980,3 +980,21 @@ emoji-picker.emoji-picker {
   .collapse-card-button span:not(.ui-icon) { display:none; }
 }
 @media (prefers-reduced-motion:reduce) { .collapsed-memory-card { transition:none; } }
+
+/* v7.3 tydligare inläggstyper */
+#create-panel{--entry-accent:#8cc4a6;--entry-soft:rgba(140,196,166,.12);--entry-line:rgba(140,196,166,.42);border-color:var(--entry-line);background:linear-gradient(180deg,var(--entry-soft),rgba(255,255,255,.96) 210px);transition:.2s ease}
+#create-panel.entry-theme-text{--entry-accent:#8cc4a6;--entry-soft:rgba(140,196,166,.13);--entry-line:rgba(140,196,166,.46)}
+#create-panel.entry-theme-image{--entry-accent:#7fb5cf;--entry-soft:rgba(127,181,207,.13);--entry-line:rgba(127,181,207,.46)}
+#create-panel.entry-theme-quiz{--entry-accent:#b39acb;--entry-soft:rgba(179,154,203,.13);--entry-line:rgba(179,154,203,.46)}
+#create-panel.entry-theme-youtube{--entry-accent:#d79a91;--entry-soft:rgba(215,154,145,.13);--entry-line:rgba(215,154,145,.46)}
+#create-panel.entry-theme-sudoku{--entry-accent:#d0ae67;--entry-soft:rgba(208,174,103,.13);--entry-line:rgba(208,174,103,.46)}
+#create-panel.entry-theme-fact{--entry-accent:#9caf78;--entry-soft:rgba(156,175,120,.14);--entry-line:rgba(156,175,120,.48)}
+#create-panel .field>label{color:var(--entry-accent)}
+#create-panel .text-input:focus,#create-panel .textarea:focus,#create-panel select:focus{border-color:var(--entry-accent);box-shadow:0 0 0 3px var(--entry-soft)}
+#create-panel .type-fields:not([hidden]),#create-panel .type-note:not([hidden]){border-color:var(--entry-line);background:linear-gradient(145deg,var(--entry-soft),rgba(255,255,255,.82))}
+.friend-page .type-button[data-type=text].active{border-color:#8cc4a6;background:rgba(140,196,166,.16)}
+.friend-page .type-button[data-type=image].active{border-color:#7fb5cf;background:rgba(127,181,207,.16)}
+.friend-page .type-button[data-type=quiz].active{border-color:#b39acb;background:rgba(179,154,203,.16)}
+.friend-page .type-button[data-type=youtube].active{border-color:#d79a91;background:rgba(215,154,145,.16)}
+.friend-page .type-button[data-type=sudoku].active{border-color:#d0ae67;background:rgba(208,174,103,.16)}
+.friend-page .type-button[data-type=fact].active{border-color:#9caf78;background:rgba(156,175,120,.17)}

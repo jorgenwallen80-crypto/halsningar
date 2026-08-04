@@ -378,12 +378,12 @@
 
   function sudokuStorageKey(id) { return `handelser_sudoku_state_${id}`; }
   function loadSudokuState(memory) {
-    const puzzle=sudokuApi.normalize(memory.extra_data?.sudoku_puzzle); const solution=sudokuApi.normalize(memory.extra_data?.sudoku_solution);
+    const puzzle=sudokuApi.normalize(memory.extra_data?.sudoku_puzzle);
     try {
       const saved=JSON.parse(localStorage.getItem(sudokuStorageKey(memory.id))||'null');
-      if(saved&&Array.isArray(saved.values)&&saved.values.length===16) return {puzzle,solution,values:saved.values.map(String),completed:Boolean(saved.completed)};
+      if(saved&&Array.isArray(saved.values)&&saved.values.length===16) return {puzzle,values:saved.values.map(String),completed:Boolean(saved.completed)};
     } catch(_){}
-    return {puzzle,solution,values:puzzle.split('').map((value)=>value==='0'?'':value),completed:false};
+    return {puzzle,values:puzzle.split('').map((value)=>value==='0'?'':value),completed:false};
   }
   function saveSudokuState(memory,state) { localStorage.setItem(sudokuStorageKey(memory.id),JSON.stringify({values:state.values,completed:state.completed})); }
   function createSudoku(memory) {
@@ -401,14 +401,25 @@
     const pad=el('div','sudoku-number-pad'); ['1','2','3','4'].forEach((number)=>{ const button=el('button','sudoku-number',number); button.type='button'; button.disabled=state.completed; button.addEventListener('click',()=>{ if(selected<0||inputs[selected].disabled)return; inputs[selected].value=number; state.values[selected]=number; inputs[selected].classList.remove('wrong'); saveSudokuState(memory,state); }); pad.appendChild(button); }); block.appendChild(pad);
     const status=el('p','sudoku-status'); status.setAttribute('aria-live','polite'); if(state.completed){status.textContent='Klart! Snyggt löst 🌿'; block.classList.add('completed');}
     const actions=el('div','sudoku-actions');
-    const hint=el('button','small-button button-with-icon'); hint.type='button'; hint.disabled=state.completed; hint.append(icon('sparkle'),document.createTextNode('Visa en siffra')); hint.addEventListener('click',()=>{
-      const candidates=state.values.map((value,index)=>({value,index})).filter(({value,index})=>state.puzzle[index]==='0'&&value!==state.solution[index]);
-      if(!candidates.length){status.textContent='Alla siffror ser redan rätt ut.';return;} const target=candidates[0].index; state.values[target]=state.solution[target]; inputs[target].value=state.solution[target]; inputs[target].classList.remove('wrong'); saveSudokuState(memory,state); status.textContent='En siffra fylldes i.';
+    const hint=el('button','small-button button-with-icon'); hint.type='button'; hint.disabled=state.completed; hint.append(icon('sparkle'),document.createTextNode('Visa en siffra')); hint.addEventListener('click',async()=>{
+      hint.disabled=true; status.textContent='Hämtar en ledtråd...';
+      try{
+        const response=await dataApi.getSudokuHint(viewerPin,memory.id,state.values);
+        const target=Number(response.cell_index); const value=String(response.cell_value||'');
+        if(target<0||!value){status.textContent='Alla siffror ser redan rätt ut.';return;}
+        state.values[target]=value; inputs[target].value=value; inputs[target].classList.remove('wrong'); saveSudokuState(memory,state); status.textContent='En siffra fylldes i.';
+      }catch(error){status.textContent=error.message;} finally{if(!state.completed)hint.disabled=false;}
     });
-    const check=el('button','secondary-button compact-button button-with-icon'); check.type='button'; check.disabled=state.completed; check.append(icon('check'),document.createTextNode('Kontrollera')); check.addEventListener('click',()=>{
-      let wrong=0,empty=0; state.values.forEach((value,index)=>{ const input=inputs[index]; input.classList.remove('wrong'); if(!value)empty+=1; else if(value!==state.solution[index]){wrong+=1;if(!input.disabled)input.classList.add('wrong');} });
-      if(!wrong&&!empty){ state.completed=true; saveSudokuState(memory,state); block.classList.add('completed'); inputs.forEach((input)=>{input.disabled=true;}); pad.querySelectorAll('button').forEach((button)=>{button.disabled=true;}); hint.disabled=true; check.disabled=true; status.textContent='Klart! Snyggt löst 🌿'; }
-      else if(wrong)status.textContent=`${wrong===1?'En ruta verkar':'Några rutor verkar'} behöva en ny titt.`; else status.textContent='Några rutor är fortfarande tomma.';
+    const check=el('button','secondary-button compact-button button-with-icon'); check.type='button'; check.disabled=state.completed; check.append(icon('check'),document.createTextNode('Kontrollera')); check.addEventListener('click',async()=>{
+      const empty=state.values.filter((value)=>!value).length; inputs.forEach((input)=>input.classList.remove('wrong'));
+      if(empty){status.textContent='Några rutor är fortfarande tomma.';return;}
+      check.disabled=true; status.textContent='Kontrollerar...';
+      try{
+        const response=await dataApi.checkSudoku(viewerPin,memory.id,state.values); const wrongIndices=Array.isArray(response.wrong_indices)?response.wrong_indices:[];
+        wrongIndices.forEach((index)=>{if(inputs[index]&&!inputs[index].disabled)inputs[index].classList.add('wrong');});
+        if(response.correct){state.completed=true;saveSudokuState(memory,state);block.classList.add('completed');inputs.forEach((input)=>{input.disabled=true;});pad.querySelectorAll('button').forEach((button)=>{button.disabled=true;});hint.disabled=true;check.disabled=true;status.textContent='Klart! Snyggt löst 🌿';}
+        else status.textContent=`${wrongIndices.length===1?'En ruta verkar':'Några rutor verkar'} behöva en ny titt.`;
+      }catch(error){status.textContent=error.message;} finally{if(!state.completed)check.disabled=false;}
     }); actions.append(hint,check); block.append(actions,status); return block;
   }
   function createFact(memory) {

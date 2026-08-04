@@ -4,6 +4,25 @@ import { randomUUID } from 'node:crypto';
 const BUCKET = process.env.HANDELSER_BUCKET || 'handelser-images';
 const MAX_BYTES = 500000;
 const ALLOWED_TYPES = new Set(['image/jpeg','image/png','image/webp']);
+const RPC_ALLOWLIST = new Set([
+  'hd_add_memory','hd_admin_help_requests','hd_admin_memories','hd_admin_presentation','hd_admin_resolve_help',
+  'hd_admin_settings','hd_admin_update_memory','hd_admin_update_presentation','hd_admin_update_settings','hd_check_quiz',
+  'hd_check_sudoku','hd_day_available','hd_day_capacity','hd_my_memories','hd_random_fact','hd_request_admin_help',
+  'hd_server_clock','hd_sudoku_hint','hd_timeline','hd_update_memory','hd_verify_admin','hd_verify_friend','hd_viewer_presentation'
+]);
+const requestWindows = new Map();
+function clientIp(event) {
+  return String(event.headers?.['x-nf-client-connection-ip'] || event.headers?.['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+}
+function enforceRateLimit(event, action) {
+  const ip=clientIp(event); const now=Date.now();
+  const authAction=action==='rpc' && /^hd_(verify_|timeline$|server_clock$)/.test(String(JSON.parse(event.body||'{}').name||''));
+  const windowMs=authAction?15*60*1000:60*1000; const max=authAction?12:180; const key=`${ip}:${authAction?'auth':'general'}`;
+  const current=requestWindows.get(key);
+  if(!current || current.resetAt<=now){requestWindows.set(key,{count:1,resetAt:now+windowMs});return;}
+  current.count+=1;
+  if(current.count>max){const seconds=Math.max(1,Math.ceil((current.resetAt-now)/1000));const error=new Error(`För många försök. Vänta ${seconds} sekunder.`);error.statusCode=429;throw error;}
+}
 
 function response(statusCode, body) {
   return {
@@ -120,6 +139,14 @@ export async function handler(event) {
     const client = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const body = JSON.parse(event.body || '{}');
     const action = String(body.action || '');
+    enforceRateLimit(event,action);
+
+    if (action === 'rpc') {
+      const name=String(body.name || '');
+      if(!RPC_ALLOWLIST.has(name)) throw new Error('RPC-anropet är inte tillåtet');
+      const data=await rpc(client,name,body.args && typeof body.args==='object'?body.args:{});
+      return response(200,{data});
+    }
 
     if (action === 'create-upload') {
       if (!validUuid(body.contributorToken)) throw new Error('Enhetens bidragsnyckel är ogiltig');
@@ -217,6 +244,6 @@ export async function handler(event) {
 
     throw new Error('Okänd åtgärd');
   } catch (error) {
-    return response(400, { error: cleanError(error) });
+    return response(Number(error?.statusCode)||400, { error: cleanError(error) });
   }
 }
