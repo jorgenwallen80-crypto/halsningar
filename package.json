@@ -1,7 +1,7 @@
 {
   "name": "handelser-production",
   "private": true,
-  "version": "7.3.2",
+  "version": "7.3.7",
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4"

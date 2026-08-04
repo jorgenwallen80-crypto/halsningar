@@ -59,6 +59,8 @@
   let dailyTimer = null;
   let friendTimelineLoading = false;
   let friendTimelineSignature = '';
+  let mySubmissionsLoading = false;
+  let mySubmissionsSignature = '';
 
   $('mode-badge').textContent = config.mode==='local' ? 'Lokalt testläge' : 'Säker livekoppling';
 
@@ -665,27 +667,63 @@
   }
 
   async function renderMySubmissions() {
-    submissions.innerHTML='<div class="loading-state"><span class="soft-spinner"></span><p>Hämtar dina bidrag</p></div>';
+    if(!submissions||!friendPin||mySubmissionsLoading)return;
+    const hasRenderedContent=Boolean(submissions.dataset.rendered==='true');
+    mySubmissionsLoading=true;
+    if(!hasRenderedContent){
+      submissions.innerHTML='<div class="loading-state"><span class="soft-spinner" aria-hidden="true"></span><p>Hämtar dina bidrag</p></div>';
+    }
     try {
-      const items=await dataApi.getMyMemories(friendPin,contributorToken); submissions.innerHTML='';
-      if (!items.length) { submissions.innerHTML='<div class="empty-state"><p>Du har inte skapat något från den här enheten ännu.</p></div>'; return; }
-      items.forEach((item) => {
-        const card=el('article','submission-card'); const top=el('div','submission-card-top'); const typeMark=el('div','submission-type-icon'); typeMark.appendChild(icon(typeIcon(item.content_type)));
-        const copy=el('div','submission-copy'); copy.appendChild(el('h3','',item.title || typeLabel(item.content_type))); copy.appendChild(el('div','submission-meta',`${formatUnlock(item.unlock_at)} · från ${item.friend_name}`));
-        const badges=el('div','submission-badges'); badges.appendChild(el('span','card-type',new Date(item.unlock_at)<=new Date()?'öppnad':'väntar'));
-        copy.appendChild(badges); top.append(typeMark,copy); card.appendChild(top);
-        const actions=el('div','submission-actions');
-        const edit=el('button','small-button button-with-icon'); edit.type='button'; edit.append(icon('edit'),document.createTextNode('Ändra')); edit.addEventListener('click',()=>startEdit(item,false));
-        const duplicate=el('button','small-button button-with-icon'); duplicate.type='button'; duplicate.append(icon('copy'),document.createTextNode('Kopiera')); duplicate.addEventListener('click',()=>startEdit(item,true));
-        const remove=el('button','small-button delete button-with-icon'); remove.type='button'; remove.append(icon('trash'),document.createTextNode('Ta bort')); remove.addEventListener('click',async()=>{
-          if (!confirm('Ta bort den här händelsen?')) return;
-          try { await dataApi.deleteMemory(friendPin,contributorToken,item.id); showToast('Händelsen togs bort'); await renderMySubmissions(); } catch(error){ showToast(error.message); }
+      const items=await dataApi.getMyMemories(friendPin,contributorToken);
+      const signature=JSON.stringify(items.map((item)=>({
+        id:String(item.id||''),
+        updated_at:String(item.updated_at||''),
+        unlock_at:String(item.unlock_at||''),
+        content_type:String(item.content_type||''),
+        title:String(item.title||''),
+        friend_name:String(item.friend_name||''),
+        opened:new Date(item.unlock_at)<=new Date()
+      })));
+      if(hasRenderedContent&&signature===mySubmissionsSignature)return;
+
+      const fragment=document.createDocumentFragment();
+      if (!items.length) {
+        const empty=el('div','empty-state');
+        empty.appendChild(el('p','','Du har inte skapat något från den här enheten ännu.'));
+        fragment.appendChild(empty);
+      } else {
+        items.forEach((item) => {
+          const card=el('article','submission-card'); const top=el('div','submission-card-top'); const typeMark=el('div','submission-type-icon'); typeMark.appendChild(icon(typeIcon(item.content_type)));
+          const copy=el('div','submission-copy'); copy.appendChild(el('h3','',item.title || typeLabel(item.content_type))); copy.appendChild(el('div','submission-meta',`${formatUnlock(item.unlock_at)} · från ${item.friend_name}`));
+          const badges=el('div','submission-badges'); badges.appendChild(el('span','card-type',new Date(item.unlock_at)<=new Date()?'öppnad':'väntar'));
+          copy.appendChild(badges); top.append(typeMark,copy); card.appendChild(top);
+          const actions=el('div','submission-actions');
+          const edit=el('button','small-button button-with-icon'); edit.type='button'; edit.append(icon('edit'),document.createTextNode('Ändra')); edit.addEventListener('click',()=>startEdit(item,false));
+          const duplicate=el('button','small-button button-with-icon'); duplicate.type='button'; duplicate.append(icon('copy'),document.createTextNode('Kopiera')); duplicate.addEventListener('click',()=>startEdit(item,true));
+          const remove=el('button','small-button delete button-with-icon'); remove.type='button'; remove.append(icon('trash'),document.createTextNode('Ta bort')); remove.addEventListener('click',async()=>{
+            if (!confirm('Ta bort den här händelsen?')) return;
+            try { await dataApi.deleteMemory(friendPin,contributorToken,item.id); showToast('Händelsen togs bort'); await renderMySubmissions(); } catch(error){ showToast(error.message); }
+          });
+          const help=el('button','small-button button-with-icon'); help.type='button'; help.append(icon('shield'),document.createTextNode('Be admin om hjälp'));
+          const helpPanel=createHelpPanel(item); help.addEventListener('click',()=>{helpPanel.hidden=!helpPanel.hidden;});
+          actions.append(edit,duplicate,remove,help); card.append(actions,helpPanel); fragment.appendChild(card);
         });
-        const help=el('button','small-button button-with-icon'); help.type='button'; help.append(icon('shield'),document.createTextNode('Be admin om hjälp'));
-        const helpPanel=createHelpPanel(item); help.addEventListener('click',()=>{helpPanel.hidden=!helpPanel.hidden;});
-        actions.append(edit,duplicate,remove,help); card.append(actions,helpPanel); submissions.appendChild(card);
-      });
-    } catch(error){ submissions.innerHTML=`<div class="error-state"><p>${error.message}</p></div>`; }
+      }
+      submissions.replaceChildren(fragment);
+      submissions.dataset.rendered='true';
+      mySubmissionsSignature=signature;
+    } catch(error){
+      if(hasRenderedContent){
+        showToast('Mina bidrag kunde inte uppdateras just nu');
+      } else {
+        submissions.innerHTML='';
+        const state=el('div','error-state');
+        state.appendChild(el('p','',error.message));
+        submissions.appendChild(state);
+      }
+    } finally {
+      mySubmissionsLoading=false;
+    }
   }
 
   async function startEdit(item,duplicate=false) {
