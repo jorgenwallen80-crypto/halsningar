@@ -630,7 +630,10 @@ body.dialog-open { overflow:hidden; }
   font-family: "Yellowtail", "Segoe Script", "Bradley Hand", cursive;
   font-size: clamp(39px,10.8vw,55px);
   line-height: 1.05;
-  font-weight: 400;
+  font-weight: normal !important;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  text-shadow: none;
   letter-spacing: .005em;
   color: var(--text);
   text-wrap: balance;
@@ -652,7 +655,10 @@ body.dialog-open { overflow:hidden; }
   font-family: "Yellowtail", "Segoe Script", "Bradley Hand", cursive;
   font-size:36px;
   line-height:1.08;
-  font-weight:400;
+  font-weight:normal !important;
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+  text-shadow:none;
   letter-spacing:.005em;
 }
 .emoji-tools { position: relative; display:flex; align-items:flex-start; margin-top:8px; }
