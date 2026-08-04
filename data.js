@@ -240,10 +240,8 @@
     return supabasePromise;
   }
   async function rpc(name,args) {
-    const client = await initSupabase();
-    const {data,error} = await client.rpc(name,args);
-    if (error) throw new Error(error.message || 'Databasanropet misslyckades');
-    return data;
+    const result = await mediaRequest({action:'rpc',name,args:args && typeof args==='object' ? args : {}});
+    return result.data;
   }
 
   async function mediaRequest(payload) {
@@ -486,6 +484,33 @@
         };
       }
       const result = await rpc('hd_check_quiz',{p_viewer_pin:pin,p_id:id,p_question_index:Number(questionIndex)||0,p_answer:answer});
+      return Array.isArray(result)?result[0]:result;
+    },
+    async checkSudoku(pin,id,values) {
+      const serialized=Array.isArray(values)?values.join(''):String(values || '');
+      if (config.mode==='local') {
+        checkLocalPin('viewer',pin);
+        const memory=loadStore().memories.find((item)=>item.id===id);
+        if (!memory || Date.now()<new Date(memory.unlock_at).getTime()) throw new Error('Sudokut är fortfarande låst');
+        const solution=String(memory.extra_data?.sudoku_solution || '');
+        const wrong=[];
+        for(let index=0;index<16;index+=1){if(serialized[index]!==solution[index])wrong.push(index);}
+        return {correct:wrong.length===0,wrong_indices:wrong};
+      }
+      const result=await rpc('hd_check_sudoku',{p_viewer_pin:pin,p_id:id,p_values:serialized});
+      return Array.isArray(result)?result[0]:result;
+    },
+    async getSudokuHint(pin,id,values) {
+      const serialized=Array.isArray(values)?values.join(''):String(values || '');
+      if (config.mode==='local') {
+        checkLocalPin('viewer',pin);
+        const memory=loadStore().memories.find((item)=>item.id===id);
+        if (!memory || Date.now()<new Date(memory.unlock_at).getTime()) throw new Error('Sudokut är fortfarande låst');
+        const solution=String(memory.extra_data?.sudoku_solution || '');
+        for(let index=0;index<16;index+=1){if(serialized[index]!==solution[index])return {cell_index:index,cell_value:solution[index] || ''};}
+        return {cell_index:-1,cell_value:''};
+      }
+      const result=await rpc('hd_sudoku_hint',{p_viewer_pin:pin,p_id:id,p_values:serialized});
       return Array.isArray(result)?result[0]:result;
     },
     async getAdminMemories(pin) {
